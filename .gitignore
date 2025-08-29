@@ -1,0 +1,38 @@
+# =====================
+# Node.js / Backend
+# =====================
+/backend/node_modules/
+/backend/dist/
+/backend/build/
+/backend/npm-debug.log*
+/backend/yarn-debug.log*
+/backend/yarn-error.log*
+
+# =====================
+# React / Frontend
+# =====================
+/frontend/node_modules/
+/frontend/build/
+/frontend/.cache/
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+
+# =====================
+# OS / IDE / Misc
+# =====================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+# Environment Variables
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+backend/.env
+frontend/.env*
+# Allow .env.example files
+!**/.env.example
