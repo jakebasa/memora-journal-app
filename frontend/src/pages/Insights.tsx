@@ -1,16 +1,27 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useEntries } from '@/hooks/useEntries';
 import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
-    CardDescription,
     CardHeader,
     CardTitle,
+    CardDescription,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { Shimmer, ShimmerCard, ShimmerText } from '@/components/ui/shimmer';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import {
     format,
     startOfWeek,
@@ -26,9 +37,15 @@ import {
     Heart,
     Target,
     Zap,
+    Sparkles,
+    Brain,
+    Loader2,
+    Tag,
+    BarChart3,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { buildApiUrl } from '@/config/api';
 
 interface JournalEntry {
     _id: string;
@@ -40,30 +57,102 @@ interface JournalEntry {
     updatedAt: string;
 }
 
-export default function Insights() {
+const Insights = () => {
     const { user, token, logout } = useAuth();
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(true);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const { toast } = useToast();
 
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedPeriod, setSelectedPeriod] = useState('monthly');
+    const [aiSummary, setAiSummary] = useState<string>('');
+    const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+    const [summaryData, setSummaryData] = useState<{
+        summary: string;
+        period: string;
+        entryCount: number;
+        dateRange: {
+            start: string;
+            end: string;
+        };
+    } | null>(null);
 
-    const fetchEntries = async () => {
+    const { entries: cachedEntries, loading: entriesLoading } = useEntries();
+
+    useEffect(() => {
+        setEntries(cachedEntries);
+        setLoading(entriesLoading);
+    }, [cachedEntries, entriesLoading]);
+
+    useEffect(() => {
+        const fetchEntries = async () => {
+            try {
+                const res = await fetch(
+                    `${
+                        import.meta.env.VITE_BACKEND_URL ||
+                        'http://localhost:5000'
+                    }/api/entries?limit=1000`,
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }
+                );
+                const data = await res.json();
+                if (res.ok) {
+                    const entriesArray = Array.isArray(data) ? data : [];
+                    setEntries(entriesArray);
+                } else {
+                    console.error('Failed to fetch entries');
+                }
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (token) fetchEntries();
+    }, [token]);
+
+    const generateSummary = async () => {
+        setIsGeneratingSummary(true);
         try {
-            const res = await fetch('http://localhost:5000/api/entries', {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const data = await res.json();
-            if (res.ok) setEntries(data);
+            const response = await fetch(
+                buildApiUrl('/api/ai/period-summary'),
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ period: selectedPeriod }),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to generate summary');
+            }
+
+            const data = await response.json();
+            setSummaryData(data);
+            setAiSummary(data.summary);
         } catch (error) {
-            console.error(error);
+            toast({
+                title: 'Summary Generation Failed',
+                description: 'Could not generate summary. Please try again.',
+                variant: 'destructive',
+            });
         } finally {
-            setLoading(false);
+            setIsGeneratingSummary(false);
         }
     };
 
     useEffect(() => {
-        if (token) fetchEntries();
-    }, [token]);
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, []);
 
     // ---------- Computed Metrics ----------
     const sortedEntries = useMemo(
@@ -79,22 +168,43 @@ export default function Insights() {
     const streakDays = useMemo(() => {
         if (!entries.length) return 0;
 
-        // Get unique journal days in YYYY-MM-DD format
+        // Get unique journal days in Philippine time YYYY-MM-DD format
         const uniqueDays = Array.from(
             new Set(
-                entries.map((e) =>
-                    new Date(e.createdAt).toISOString().slice(0, 10)
-                )
+                entries.map((e) => {
+                    // Convert to Philippine time before extracting date
+                    const philippineDate = new Date(
+                        e.createdAt
+                    ).toLocaleDateString('en-CA', {
+                        timeZone: 'Asia/Manila',
+                    });
+                    return philippineDate; // Returns YYYY-MM-DD format
+                })
             )
         ).sort(); // ascending order
 
-        let streak = 0;
-        const day = new Date(); // today
+        if (uniqueDays.length === 0) return 0;
 
-        // Loop backwards from today
-        while (uniqueDays.includes(day.toISOString().slice(0, 10))) {
+        let streak = 0;
+        const today = new Date();
+
+        // Start from today in Philippine time
+        const checkDate = new Date(
+            today.toLocaleDateString('en-CA', {
+                timeZone: 'Asia/Manila',
+            })
+        );
+
+        // Check if there's an entry today, if not start from yesterday
+        const todayStr = checkDate.toISOString().slice(0, 10);
+        if (!uniqueDays.includes(todayStr)) {
+            checkDate.setDate(checkDate.getDate() - 1);
+        }
+
+        // Loop backwards from the starting date
+        while (uniqueDays.includes(checkDate.toISOString().slice(0, 10))) {
             streak++;
-            day.setDate(day.getDate() - 1);
+            checkDate.setDate(checkDate.getDate() - 1);
         }
 
         return streak;
@@ -142,11 +252,22 @@ export default function Insights() {
 
     const writingTimes: { hour: string; count: number }[] = useMemo(() => {
         const arr = Array.from({ length: 24 }, (_, i) => ({
-            hour: `${i}:00`,
+            hour: new Date(2024, 0, 1, i).toLocaleTimeString('en-PH', {
+                hour: 'numeric',
+                hour12: true,
+                timeZone: 'Asia/Manila',
+            }),
             count: 0,
         }));
         entries.forEach((e) => {
-            const h = new Date(e.createdAt).getHours();
+            // Convert to Philippine time before getting hour
+            const philippineDate = new Date(e.createdAt).toLocaleString(
+                'en-US',
+                {
+                    timeZone: 'Asia/Manila',
+                }
+            );
+            const h = new Date(philippineDate).getHours();
             arr[h].count += 1;
         });
         return arr.filter((w) => w.count > 0);
@@ -191,7 +312,213 @@ export default function Insights() {
         currentPage * itemsPerPage
     );
 
-    if (loading) return <div className='p-8 text-center'>Loading...</div>;
+    if (loading) {
+        return (
+            <div className='min-h-screen bg-gradient-to-br from-background to-secondary-soft'>
+                <header className='border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
+                    <div className='container mx-auto px-4 py-4 flex items-center justify-between'>
+                        <div className='flex items-center gap-4'>
+                            <Button
+                                variant='ghost'
+                                size='icon'
+                                onClick={() => navigate('/dashboard')}
+                            >
+                                <ArrowLeft className='h-4 w-4' />
+                            </Button>
+                            <div>
+                                <h1 className='text-2xl font-semibold text-foreground'>
+                                    Insights
+                                </h1>
+                                <p className='text-sm text-muted-foreground'>
+                                    Your journaling patterns and progress
+                                </p>
+                            </div>
+                        </div>
+                        <div className='flex items-center gap-4'>
+                            <span className='text-sm text-muted-foreground hidden sm:block'>
+                                Hello, {user?.name.split(' ')[0]}
+                            </span>
+                            <ThemeToggle />
+                            <Button
+                                variant='ghost'
+                                onClick={() => setShowLogoutModal(true)}
+                                size='sm'
+                            >
+                                <span className='hidden sm:inline'>Logout</span>
+                                <span className='sm:hidden'>Exit</span>
+                            </Button>
+                        </div>
+                    </div>
+                </header>
+
+                <main className='container mx-auto px-4 py-8'>
+                    {/* Journey Reflection Shimmer */}
+                    <Card className='shadow-elegant mb-8'>
+                        <CardHeader>
+                            <div className='flex items-center justify-between'>
+                                <div className='flex items-center gap-2'>
+                                    <Sparkles className='h-5 w-5 text-primary' />
+                                    <CardTitle>Journey Reflection</CardTitle>
+                                </div>
+                                <div className='flex items-center gap-3'>
+                                    <Shimmer className='h-10 w-32 rounded' />
+                                    <Shimmer className='h-10 w-40 rounded' />
+                                </div>
+                            </div>
+                            <CardDescription>
+                                Discover patterns and insights from your
+                                journaling journey
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className='text-center py-8'>
+                                <Shimmer className='h-12 w-12 mx-auto mb-4 rounded' />
+                                <ShimmerText
+                                    lines={2}
+                                    className='max-w-md mx-auto'
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Key Metrics Shimmer */}
+                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
+                        <ShimmerCard />
+                        <ShimmerCard />
+                        <ShimmerCard />
+                        <ShimmerCard />
+                    </div>
+
+                    {/* Charts Shimmer */}
+                    <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8'>
+                        <Card className='shadow-elegant'>
+                            <CardHeader>
+                                <CardTitle className='flex items-center gap-2'>
+                                    <Calendar className='h-5 w-5' /> Weekly
+                                    Activity
+                                </CardTitle>
+                                <CardDescription>
+                                    Your journaling activity this week
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className='flex justify-between items-center mb-4'>
+                                    {Array.from({ length: 7 }).map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className='flex flex-col items-center space-y-2'
+                                        >
+                                            <Shimmer className='w-8 h-8 rounded-sm' />
+                                            <Shimmer className='w-6 h-3 rounded' />
+                                        </div>
+                                    ))}
+                                </div>
+                                <Shimmer className='h-4 w-32 mx-auto rounded' />
+                            </CardContent>
+                        </Card>
+
+                        <Card className='shadow-elegant'>
+                            <CardHeader>
+                                <CardTitle className='flex items-center gap-2'>
+                                    <Heart className='h-5 w-5' /> Mood
+                                    Distribution
+                                </CardTitle>
+                                <CardDescription>
+                                    How you've been feeling
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className='space-y-4'>
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                    <div key={i} className='space-y-2'>
+                                        <div className='flex items-center justify-between'>
+                                            <Shimmer className='h-4 w-16 rounded' />
+                                            <Shimmer className='h-4 w-12 rounded' />
+                                        </div>
+                                        <Shimmer className='h-2 w-full rounded' />
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Bottom Cards Shimmer */}
+                    <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8'>
+                        <Card className='shadow-elegant'>
+                            <CardHeader>
+                                <CardTitle className='flex items-center gap-2'>
+                                    <Target className='h-5 w-5' /> Popular
+                                    Topics
+                                </CardTitle>
+                                <CardDescription>
+                                    Your most frequently used tags
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className='space-y-4'>
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className='flex items-center justify-between'
+                                    >
+                                        <div className='flex items-center gap-3'>
+                                            <Shimmer className='w-6 h-6 rounded-full' />
+                                            <Shimmer className='h-6 w-20 rounded-full' />
+                                        </div>
+                                        <Shimmer className='h-4 w-16 rounded' />
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+
+                        <Card className='shadow-elegant'>
+                            <CardHeader>
+                                <CardTitle className='flex items-center gap-2'>
+                                    <Clock className='h-5 w-5' /> Writing Times
+                                </CardTitle>
+                                <CardDescription>
+                                    When you prefer to journal
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className='space-y-4'>
+                                {Array.from({ length: 4 }).map((_, i) => (
+                                    <div key={i} className='space-y-2'>
+                                        <div className='flex items-center justify-between'>
+                                            <Shimmer className='h-4 w-12 rounded' />
+                                            <Shimmer className='h-4 w-16 rounded' />
+                                        </div>
+                                        <Shimmer className='h-2 w-full rounded' />
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Progress Shimmer */}
+                    <Card className='mt-8 shadow-elegant'>
+                        <CardHeader>
+                            <CardTitle className='flex items-center gap-2'>
+                                <Target className='h-5 w-5' /> Your Progress
+                            </CardTitle>
+                            <CardDescription>
+                                Keep up the great work!
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+                            {Array.from({ length: 3 }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className='text-center p-6 bg-primary/5 rounded-lg'
+                                >
+                                    <Shimmer className='h-8 w-16 mx-auto mb-2 rounded' />
+                                    <Shimmer className='h-4 w-24 mx-auto mb-1 rounded' />
+                                    <Shimmer className='h-3 w-20 mx-auto rounded' />
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </main>
+            </div>
+        );
+    }
 
     // ---------- JSX Render ----------
     return (
@@ -216,18 +543,134 @@ export default function Insights() {
                         </div>
                     </div>
                     <div className='flex items-center gap-4'>
-                        <span className='text-sm text-muted-foreground'>
+                        <span className='text-sm text-muted-foreground hidden sm:block'>
                             Hello, {user?.name.split(' ')[0]}
                         </span>
                         <ThemeToggle />
-                        <Button variant='ghost' onClick={logout}>
-                            Logout
+                        <Button
+                            variant='ghost'
+                            onClick={() => setShowLogoutModal(true)}
+                            size='sm'
+                        >
+                            <span className='hidden sm:inline'>Logout</span>
+                            <span className='sm:hidden'>Exit</span>
                         </Button>
                     </div>
                 </div>
             </header>
 
             <main className='container mx-auto px-4 py-8'>
+                {/* Journey Reflection Section - Hidden in simple mode */}
+                <Card className='shadow-elegant mb-8'>
+                    <CardHeader>
+                        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
+                            <div className='flex items-center gap-2'>
+                                <Sparkles className='h-5 w-5 text-primary' />
+                                <CardTitle>Journey Reflection</CardTitle>
+                            </div>
+                            <div className='flex items-center gap-3 flex-wrap'>
+                                <Select
+                                    value={selectedPeriod}
+                                    onValueChange={setSelectedPeriod}
+                                >
+                                    <SelectTrigger className='w-32'>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value='daily'>
+                                            Daily
+                                        </SelectItem>
+                                        <SelectItem value='weekly'>
+                                            Weekly
+                                        </SelectItem>
+                                        <SelectItem value='monthly'>
+                                            Monthly
+                                        </SelectItem>
+                                        <SelectItem value='yearly'>
+                                            Yearly
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    onClick={generateSummary}
+                                    disabled={isGeneratingSummary}
+                                    variant='outline'
+                                    size='sm'
+                                    className='flex-shrink-0'
+                                >
+                                    {isGeneratingSummary ? (
+                                        <>
+                                            <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                                            <span className='hidden sm:inline'>
+                                                Generating...
+                                            </span>
+                                            <span className='sm:hidden'>
+                                                Gen...
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Brain className='h-4 w-4 sm:mr-2' />
+                                            <span className='hidden sm:inline'>
+                                                Generate Summary
+                                            </span>
+                                            <span className='sm:hidden'>
+                                                Generate
+                                            </span>
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                        <CardDescription>
+                            Discover patterns and insights from your journaling
+                            journey for the selected time period
+                        </CardDescription>
+                    </CardHeader>
+                    {summaryData && (
+                        <CardContent>
+                            <div className='bg-gradient-to-r from-primary-soft/20 to-secondary-soft/20 border border-primary/20 rounded-lg p-6'>
+                                <div className='flex items-center gap-2 mb-4'>
+                                    <Brain className='h-5 w-5 text-primary' />
+                                    <span className='font-medium text-primary'>
+                                        {summaryData.period
+                                            .charAt(0)
+                                            .toUpperCase() +
+                                            summaryData.period.slice(1)}{' '}
+                                        Summary
+                                    </span>
+                                    <Badge variant='secondary' className='ml-2'>
+                                        {summaryData.entryCount} entries
+                                    </Badge>
+                                </div>
+                                <div className='prose prose-sm max-w-none text-foreground/90 leading-relaxed'>
+                                    {aiSummary
+                                        .split('\n')
+                                        .map((paragraph, index) => (
+                                            <p
+                                                key={index}
+                                                className='mb-3 last:mb-0'
+                                            >
+                                                {paragraph}
+                                            </p>
+                                        ))}
+                                </div>
+                            </div>
+                        </CardContent>
+                    )}
+                    {!summaryData && !isGeneratingSummary && (
+                        <CardContent>
+                            <div className='text-center py-8 text-muted-foreground'>
+                                <Sparkles className='h-12 w-12 mx-auto mb-4 opacity-50' />
+                                <p>
+                                    Select a time period and discover insights
+                                    from your journaling journey
+                                </p>
+                            </div>
+                        </CardContent>
+                    )}
+                </Card>
+
                 {/* Key Metrics */}
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
                     <Card className='shadow-elegant'>
@@ -501,13 +944,53 @@ export default function Insights() {
                     <CardContent className='grid grid-cols-1 md:grid-cols-3 gap-6'>
                         <div className='text-center p-6 bg-primary/5 rounded-lg'>
                             <div className='text-3xl font-bold text-primary mb-2'>
-                                {Math.round((streakDays / 30) * 100)}%
+                                {(() => {
+                                    const currentMonth = new Date().getMonth();
+                                    const currentYear =
+                                        new Date().getFullYear();
+                                    const monthlyEntries = entries.filter(
+                                        (entry) => {
+                                            const entryDate = new Date(
+                                                entry.createdAt
+                                            );
+                                            return (
+                                                entryDate.getMonth() ===
+                                                    currentMonth &&
+                                                entryDate.getFullYear() ===
+                                                    currentYear
+                                            );
+                                        }
+                                    ).length;
+                                    return Math.round(
+                                        (monthlyEntries / 30) * 100
+                                    );
+                                })()}
+                                %
                             </div>
                             <p className='text-sm text-muted-foreground'>
                                 Monthly Goal Progress
                             </p>
                             <p className='text-xs text-muted-foreground mt-1'>
-                                {streakDays} / 30 days
+                                {(() => {
+                                    const currentMonth = new Date().getMonth();
+                                    const currentYear =
+                                        new Date().getFullYear();
+                                    const monthlyEntries = entries.filter(
+                                        (entry) => {
+                                            const entryDate = new Date(
+                                                entry.createdAt
+                                            );
+                                            return (
+                                                entryDate.getMonth() ===
+                                                    currentMonth &&
+                                                entryDate.getFullYear() ===
+                                                    currentYear
+                                            );
+                                        }
+                                    ).length;
+                                    return monthlyEntries;
+                                })()}{' '}
+                                / 30 days
                             </p>
                         </div>
                         <div className='text-center p-6 bg-primary/5 rounded-lg'>
@@ -535,6 +1018,21 @@ export default function Insights() {
                     </CardContent>
                 </Card>
             </main>
+
+            <ConfirmationModal
+                isOpen={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={() => {
+                    logout();
+                    setShowLogoutModal(false);
+                }}
+                title='Logout'
+                description='Are you sure you want to logout?'
+                confirmText='Logout'
+                cancelText='Cancel'
+            />
         </div>
     );
-}
+};
+
+export default Insights;

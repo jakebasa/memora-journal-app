@@ -1,5 +1,5 @@
 // /pages/BrowseEntries.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,12 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { Shimmer, ShimmerCard, ShimmerText, ShimmerEntry } from '@/components/ui/shimmer';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { useEntries } from '@/hooks/useEntries';
+import { buildApiUrl } from '@/config/api';
 import { formatDistanceToNow, format } from 'date-fns';
 import { Search, Filter, ArrowLeft, Eye, Edit, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -35,27 +40,53 @@ export default function BrowseEntries() {
     const navigate = useNavigate();
 
     const [entries, setEntries] = useState<JournalEntry[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [sortBy, setSortBy] = useState('newest');
+    const [selectedMood, setSelectedMood] = useState('');
+    const [selectedTag, setSelectedTag] = useState('');
+    const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [filterTag, setFilterTag] = useState('all');
     const [filterYear, setFilterYear] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [pagination, setPagination] = useState({
+        total: 0,
+        limit: 20,
+        offset: 0,
+        hasMore: false
+    });
 
-    const fetchEntries = async () => {
+    const fetchEntries = useCallback(async () => {
+        setIsLoading(true);
         try {
-            const res = await fetch(`${BACKEND_URL}/api/entries`, {
+            const res = await fetch(buildApiUrl(`/api/entries?page=${currentPage}&limit=${PAGE_SIZE}&search=${encodeURIComponent(searchTerm)}&mood=${selectedMood}&tag=${selectedTag}`), {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
-            if (res.ok) setEntries(data);
+            if (res.ok) {
+                // Debug logs removed - API working correctly
+                
+                // Ensure we have a valid array
+                if (Array.isArray(data)) {
+                    setEntries(data);
+                } else if (data && Array.isArray(data.entries)) {
+                    setEntries(data.entries);
+                } else {
+                    console.error('Invalid API response format:', data);
+                    setEntries([]);
+                }
+            }
         } catch (error) {
             console.error('Failed to fetch entries', error);
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, [token]);
 
     useEffect(() => {
         if (token) fetchEntries();
-    }, [token]);
+    }, [token, fetchEntries]);
 
     useEffect(() => {
         const handleStorage = (e: StorageEvent) => {
@@ -63,14 +94,14 @@ export default function BrowseEntries() {
         };
         window.addEventListener('storage', handleStorage);
         return () => window.removeEventListener('storage', handleStorage);
-    }, []);
+    }, [fetchEntries]);
 
-    const allTags = Array.from(new Set(entries.flatMap((entry) => entry.tags)));
-    const allYears = Array.from(
+    const allTags = Array.isArray(entries) ? Array.from(new Set(entries.flatMap((entry) => entry.tags))) : [];
+    const allYears = Array.isArray(entries) ? Array.from(
         new Set(entries.map((entry) => new Date(entry.createdAt).getFullYear()))
-    ).sort((a, b) => b - a);
+    ).sort((a, b) => b - a) : [];
 
-    const filteredEntries = entries
+    const filteredEntries = Array.isArray(entries) ? entries
         .filter((entry) => {
             const matchesSearch =
                 entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -95,12 +126,14 @@ export default function BrowseEntries() {
                     new Date(b.createdAt).getTime()
                 );
             return a.title.localeCompare(b.title);
-        });
+        }) : [];
 
-    const totalPages = Math.ceil(filteredEntries.length / PAGE_SIZE);
+    // For performance with large datasets, implement virtual pagination
+    const ITEMS_PER_PAGE = 50; // Increased from 9 for better performance
+    const totalPages = Math.ceil(filteredEntries.length / ITEMS_PER_PAGE);
     const paginatedEntries = filteredEntries.slice(
-        (currentPage - 1) * PAGE_SIZE,
-        currentPage * PAGE_SIZE
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
     );
 
     useEffect(() => {
@@ -131,16 +164,18 @@ export default function BrowseEntries() {
                         </div>
                     </div>
                     <div className='flex items-center gap-4'>
-                        <span className='text-sm text-muted-foreground'>
+                        <span className='text-sm text-muted-foreground hidden sm:block'>
                             Hello, {user?.name.split(' ')[0]}
                         </span>
                         <ThemeToggle />
                         <Button
                             variant='ghost'
-                            onClick={logout}
+                            onClick={() => setShowLogoutModal(true)}
                             className='text-muted-foreground hover:text-foreground'
+                            size='sm'
                         >
-                            Logout
+                            <span className='hidden sm:inline'>Logout</span>
+                            <span className='sm:hidden'>Exit</span>
                         </Button>
                     </div>
                 </div>
@@ -167,7 +202,7 @@ export default function BrowseEntries() {
                                     className='pl-10'
                                 />
                             </div>
-                            <Select value={sortBy} onValueChange={setSortBy}>
+                            <Select value={sortBy} onValueChange={(value: 'newest' | 'oldest' | 'title') => setSortBy(value)}>
                                 <SelectTrigger>
                                     <SelectValue placeholder='Sort by' />
                                 </SelectTrigger>
@@ -227,97 +262,104 @@ export default function BrowseEntries() {
                 </Card>
 
                 {/* ENTRIES GRID */}
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-                    {paginatedEntries.map((entry) => (
-                        <Card
-                            key={entry._id}
-                            className='shadow-elegant hover:shadow-soft transition-shadow cursor-pointer group'
-                        >
-                            <CardHeader className='pb-3'>
-                                <div className='flex items-start justify-between'>
-                                    <div className='flex-1'>
-                                        <CardTitle className='text-lg font-medium line-clamp-1'>
-                                            {entry.title}
-                                        </CardTitle>
-                                        <div className='flex items-center gap-2 mt-2'>
-                                            <Badge
-                                                variant='secondary'
-                                                className='text-sm'
-                                            >
-                                                {entry.mood}
-                                            </Badge>
-                                            <div className='flex items-center gap-1 text-xs text-muted-foreground'>
-                                                <Calendar className='h-3 w-3' />
-                                                {format(
-                                                    new Date(entry.createdAt),
-                                                    'MMM dd, yyyy'
-                                                )}
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+                    {isLoading ? (
+                        // Shimmer loading for entries
+                        Array.from({ length: 6 }).map((_, i) => (
+                            <ShimmerEntry key={i} />
+                        ))
+                    ) : (
+                        paginatedEntries.map((entry) => (
+                            <Card
+                                key={entry._id}
+                                className='shadow-elegant hover:shadow-soft transition-shadow cursor-pointer group'
+                            >
+                                <CardHeader className='pb-3'>
+                                    <div className='flex items-start justify-between'>
+                                        <div className='flex-1'>
+                                            <CardTitle className='text-lg font-medium line-clamp-1'>
+                                                {entry.title}
+                                            </CardTitle>
+                                            <div className='flex items-center gap-2 mt-2'>
+                                                <Badge
+                                                    variant='secondary'
+                                                    className='text-sm'
+                                                >
+                                                    {entry.mood}
+                                                </Badge>
+                                                <div className='flex items-center gap-1 text-xs text-muted-foreground'>
+                                                    <Calendar className='h-3 w-3' />
+                                                    {format(
+                                                        new Date(entry.createdAt),
+                                                        'MMM dd, yyyy'
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent className='pt-0'>
-                                <div
-                                    className='text-sm text-muted-foreground line-clamp-3 mb-4 prose prose-sm max-w-none'
-                                    dangerouslySetInnerHTML={{
-                                        __html: entry.content,
-                                    }}
-                                />
-                                <div className='flex items-center gap-2 flex-wrap mb-4'>
-                                    {entry.tags.slice(0, 3).map((tag) => (
-                                        <Badge
-                                            key={tag}
-                                            variant='outline'
-                                            className='text-xs'
-                                        >
-                                            {tag}
-                                        </Badge>
-                                    ))}
-                                    {entry.tags.length > 3 && (
-                                        <Badge
-                                            variant='outline'
-                                            className='text-xs'
-                                        >
-                                            +{entry.tags.length - 3}
-                                        </Badge>
-                                    )}
-                                </div>
-                                <div className='flex items-center justify-between'>
-                                    <p className='text-xs text-muted-foreground'>
-                                        {formatDistanceToNow(
-                                            new Date(entry.createdAt),
-                                            { addSuffix: true }
-                                        )}
-                                    </p>
-                                    <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity'>
-                                        <Button
-                                            variant='ghost'
-                                            size='icon-sm'
-                                            asChild
-                                            className='h-8 w-8'
-                                        >
-                                            <Link to={`/entries/${entry._id}`}>
-                                                <Eye className='h-3 w-3' />
-                                            </Link>
-                                        </Button>
-                                        <Button
-                                            variant='ghost'
-                                            size='icon-sm'
-                                            asChild
-                                            className='h-8 w-8'
-                                        >
-                                            <Link
-                                                to={`/entries/${entry._id}/edit`}
+                                </CardHeader>
+                                <CardContent className='pt-0'>
+                                    <div
+                                        className='text-sm text-muted-foreground line-clamp-3 mb-4 prose prose-sm max-w-none'
+                                        dangerouslySetInnerHTML={{
+                                            __html: entry.content,
+                                        }}
+                                    />
+                                    <div className='flex items-center gap-2 flex-wrap mb-4'>
+                                        {entry.tags.slice(0, 3).map((tag) => (
+                                            <Badge
+                                                key={tag}
+                                                variant='outline'
+                                                className='text-xs'
                                             >
-                                                <Edit className='h-3 w-3' />
-                                            </Link>
-                                        </Button>
+                                                {tag}
+                                            </Badge>
+                                        ))}
+                                        {entry.tags.length > 3 && (
+                                            <Badge
+                                                variant='outline'
+                                                className='text-xs'
+                                            >
+                                                +{entry.tags.length - 3}
+                                            </Badge>
+                                        )}
                                     </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                    <div className='flex items-center justify-between'>
+                                        <p className='text-xs text-muted-foreground'>
+                                            {formatDistanceToNow(
+                                                new Date(entry.createdAt),
+                                                { addSuffix: true }
+                                            )}
+                                        </p>
+                                        <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity'>
+                                            <Button
+                                                variant='ghost'
+                                                size='icon-sm'
+                                                asChild
+                                                className='h-8 w-8'
+                                            >
+                                                <Link to={`/entries/${entry._id}`}>
+                                                    <Eye className='h-3 w-3' />
+                                                </Link>
+                                            </Button>
+                                            <Button
+                                                variant='ghost'
+                                                size='icon-sm'
+                                                asChild
+                                                className='h-8 w-8'
+                                            >
+                                                <Link
+                                                    to={`/entries/${entry._id}/edit`}
+                                                >
+                                                    <Edit className='h-3 w-3' />
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))
+                    )}
                 </div>
 
                 {/* PAGINATION CONTROLS */}
@@ -343,7 +385,7 @@ export default function BrowseEntries() {
                     </div>
                 )}
 
-                {filteredEntries.length === 0 && (
+                {!isLoading && filteredEntries.length === 0 && (
                     <Card className='text-center py-12 shadow-elegant'>
                         <CardContent>
                             <div className='text-muted-foreground mb-4'>
@@ -369,6 +411,19 @@ export default function BrowseEntries() {
                     </Card>
                 )}
             </main>
+            
+            <ConfirmationModal
+                isOpen={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={() => {
+                    logout();
+                    setShowLogoutModal(false);
+                }}
+                title='Logout'
+                description='Are you sure you want to logout?'
+                confirmText='Logout'
+                cancelText='Cancel'
+            />
         </div>
     );
 }

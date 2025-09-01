@@ -1,20 +1,14 @@
-import { useEffect, useState } from 'react';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { formatDistanceToNow } from 'date-fns';
-import { Eye, Edit } from 'lucide-react';
+import { useEffect, useState, memo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './card';
+import { Badge } from './badge';
+import { Button } from './button';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
+import { Eye, Edit } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../hooks/use-toast';
+import { useEntries } from '../../hooks/useEntries';
 
-const BACKEND_URL = 'http://localhost:5000';
 interface JournalEntry {
     _id: string;
     title: string;
@@ -25,39 +19,22 @@ interface JournalEntry {
     updatedAt: string;
 }
 
-export function RecentEntries() {
-    const [entries, setEntries] = useState<JournalEntry[]>([]);
-    const { token } = useAuth();
+function RecentEntriesComponent() {
+    const { entries, loading, error } = useEntries();
     const { toast } = useToast();
 
+    // Show only the 3 most recent entries
+    const recentEntries = entries.slice(0, 3);
+
     useEffect(() => {
-        const fetchEntries = async () => {
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/entries?limit=3`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (!res.ok) {
-                    throw new Error('Failed to fetch entries');
-                }
-
-                const data: JournalEntry[] = await res.json();
-
-                // If backend doesn’t support ?limit, slice manually
-                setEntries(data.slice(0, 3));
-            } catch (error) {
-                toast({
-                    title: 'Error',
-                    description: (error as Error).message,
-                    variant: 'destructive',
-                });
-            }
-        };
-
-        if (token) fetchEntries();
-    }, [token]);
+        if (error) {
+            toast({
+                title: 'Error',
+                description: error,
+                variant: 'destructive',
+            });
+        }
+    }, [error, toast]);
 
     return (
         <Card className='shadow-elegant'>
@@ -70,12 +47,12 @@ export function RecentEntries() {
                 </CardDescription>
             </CardHeader>
             <CardContent className='space-y-4'>
-                {entries.length === 0 ? (
+                {recentEntries.length === 0 ? (
                     <p className='text-sm text-muted-foreground'>
                         No entries yet.
                     </p>
                 ) : (
-                    entries.map((entry) => (
+                    recentEntries.map((entry) => (
                         <div
                             key={entry._id}
                             className='space-y-3 p-4 rounded-lg bg-secondary-soft border border-border hover:shadow-soft transition-smooth'
@@ -123,7 +100,7 @@ export function RecentEntries() {
                                         size='icon-sm'
                                         asChild
                                     >
-                                        <Link to={`/entries/${entry._id}`}>
+                                        <Link to={`/entries/${entry._id}?from=dashboard`}>
                                             <Eye className='h-3 w-3' />
                                         </Link>
                                     </Button>
@@ -132,7 +109,7 @@ export function RecentEntries() {
                                         size='icon-sm'
                                         asChild
                                     >
-                                        <Link to={`/entries/${entry._id}/edit`}>
+                                        <Link to={`/entries/${entry._id}/edit?from=dashboard`}>
                                             <Edit className='h-3 w-3' />
                                         </Link>
                                     </Button>
@@ -145,3 +122,5 @@ export function RecentEntries() {
         </Card>
     );
 }
+
+export const RecentEntries = memo(RecentEntriesComponent);

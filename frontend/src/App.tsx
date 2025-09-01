@@ -2,11 +2,21 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import {
+    BrowserRouter,
+    Routes,
+    Route,
+    Navigate,
+    useLocation,
+} from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { ChatProvider } from '@/contexts/ChatContext';
+import { GlobalChatButton } from '@/components/GlobalChatButton';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import NewEntry from './pages/NewEntry';
 import BrowseEntries from './pages/BrowseEntries';
@@ -50,6 +60,22 @@ const AppRoutes = () => (
             element={
                 <PublicRoute>
                     <Signup />
+                </PublicRoute>
+            }
+        />
+        <Route
+            path='/forgot-password'
+            element={
+                <PublicRoute>
+                    <ForgotPassword />
+                </PublicRoute>
+            }
+        />
+        <Route
+            path='/reset-password/:token'
+            element={
+                <PublicRoute>
+                    <ResetPassword />
                 </PublicRoute>
             }
         />
@@ -115,17 +141,20 @@ const AppRoutes = () => (
 
 const App = () => (
     <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-            <AuthProvider>
-                <TooltipProvider>
-                    <Toaster />
-                    <Sonner />
-                    <BrowserRouter>
-                        <AppRoutes />
-                    </BrowserRouter>
-                </TooltipProvider>
-            </AuthProvider>
-        </ThemeProvider>
+        <AuthProvider>
+            <ThemeProvider>
+                <ChatProvider>
+                    <TooltipProvider>
+                        <Toaster />
+                        <Sonner />
+                        <BrowserRouter>
+                            <AppRoutes />
+                            <GlobalChatButton />
+                        </BrowserRouter>
+                    </TooltipProvider>
+                </ChatProvider>
+            </ThemeProvider>
+        </AuthProvider>
     </QueryClientProvider>
 );
 

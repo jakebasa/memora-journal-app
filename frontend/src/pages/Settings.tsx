@@ -1,15 +1,10 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 import {
     Select,
     SelectContent,
@@ -17,8 +12,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { Shimmer, ShimmerText } from '@/components/ui/shimmer';
+import { useTheme } from '@/contexts/ThemeContext';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { useAuth } from '@/contexts/AuthContext';
 import {
     ArrowLeft,
@@ -37,6 +34,7 @@ export default function Settings() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const { toast } = useToast();
+    const { themePreference, colorTheme, setThemePreference, setColorTheme, isLoading: themeLoading } = useTheme();
 
     // Profile settings
     const [name, setName] = useState(user?.name || '');
@@ -57,14 +55,8 @@ export default function Settings() {
     const [entriesPerPage, setEntriesPerPage] = useState('10');
 
     const [isLoading, setIsLoading] = useState(false);
-    // const [primaryColor, setPrimaryColor] = useState(
-    //     localStorage.getItem('primaryColor') || '151 25% 35%'
-    // );
-
-    // const handleColorChange = (value: string) => {
-    //     setPrimaryColor(value);
-    //     localStorage.setItem('journal-primary-color', value);
-    // };
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
 
     const handleSaveProfile = async () => {
         if (!name.trim() || !email.trim()) {
@@ -126,6 +118,173 @@ export default function Settings() {
         });
     };
 
+    // Simulate initial loading
+    useState(() => {
+        const timer = setTimeout(() => {
+            setIsInitialLoading(false);
+        }, 1500);
+        return () => clearTimeout(timer);
+    });
+
+    if (isInitialLoading) {
+        return (
+            <div className='min-h-screen bg-gradient-to-br from-background to-secondary-soft'>
+                <header className='border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
+                    <div className='container mx-auto px-4 py-4 flex items-center justify-between'>
+                        <div className='flex items-center gap-4'>
+                            <Button
+                                variant='ghost'
+                                size='icon'
+                                onClick={() => navigate('/dashboard')}
+                                className='hover:bg-secondary-soft'
+                            >
+                                <ArrowLeft className='h-4 w-4' />
+                            </Button>
+                            <div>
+                                <h1 className='text-2xl font-semibold text-foreground'>
+                                    Settings
+                                </h1>
+                                <p className='text-sm text-muted-foreground'>
+                                    Manage your account and preferences
+                                </p>
+                            </div>
+                        </div>
+                        <div className='flex items-center gap-4'>
+                            <span className='text-sm text-muted-foreground hidden sm:block'>
+                                Hello, {user?.name.split(' ')[0]}
+                            </span>
+                            <ThemeToggle />
+                            <Button
+                                variant='ghost'
+                                onClick={() => setShowLogoutModal(true)}
+                                className='text-muted-foreground hover:text-foreground'
+                                size='sm'
+                            >
+                                <span className='hidden sm:inline'>Logout</span>
+                                <span className='sm:hidden'>Exit</span>
+                            </Button>
+                        </div>
+                    </div>
+                </header>
+
+                <main className='container mx-auto px-4 py-8 max-w-4xl'>
+                    <div className='space-y-8'>
+                        {/* Profile Settings Shimmer */}
+                        <Card className='shadow-elegant'>
+                            <CardHeader>
+                                <CardTitle className='flex items-center gap-2'>
+                                    <User className='h-5 w-5' />
+                                    Profile Settings
+                                </CardTitle>
+                                <CardDescription>
+                                    Update your personal information and account details
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className='space-y-6'>
+                                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                                    <div className='space-y-2'>
+                                        <Label>Full Name</Label>
+                                        <Shimmer className='h-10 w-full rounded' />
+                                    </div>
+                                    <div className='space-y-2'>
+                                        <Label>Email Address</Label>
+                                        <Shimmer className='h-10 w-full rounded' />
+                                    </div>
+                                </div>
+                                <Separator />
+                                <div className='flex justify-end'>
+                                    <Shimmer className='h-10 w-32 rounded' />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Notification Settings Shimmer */}
+                        <Card className='shadow-elegant'>
+                            <CardHeader>
+                                <CardTitle className='flex items-center gap-2'>
+                                    <Bell className='h-5 w-5' />
+                                    Notifications
+                                </CardTitle>
+                                <CardDescription>
+                                    Configure when and how you receive notifications
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className='space-y-6'>
+                                {Array.from({ length: 4 }).map((_, i) => (
+                                    <div key={i} className='flex items-center justify-between'>
+                                        <div className='space-y-0.5'>
+                                            <Shimmer className='h-4 w-32 rounded' />
+                                            <Shimmer className='h-3 w-48 rounded' />
+                                        </div>
+                                        <Shimmer className='h-6 w-11 rounded-full' />
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+
+                        {/* App Preferences Shimmer */}
+                        <Card className='shadow-elegant'>
+                            <CardHeader>
+                                <CardTitle className='flex items-center gap-2'>
+                                    <Palette className='h-5 w-5' />
+                                    App Preferences
+                                </CardTitle>
+                                <CardDescription>
+                                    Customize your journaling experience
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className='space-y-6'>
+                                <div className='space-y-6'>
+                                    <div className='space-y-2'>
+                                        <Label>Theme Preference</Label>
+                                        <Shimmer className='h-10 w-full rounded' />
+                                    </div>
+                                    <div className='space-y-2'>
+                                        <Label>Color Theme</Label>
+                                        <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3'>
+                                            {Array.from({ length: 6 }).map((_, i) => (
+                                                <Shimmer key={i} className='h-16 w-full rounded-lg' />
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Data Management Shimmer */}
+                        <Card className='shadow-elegant'>
+                            <CardHeader>
+                                <CardTitle className='flex items-center gap-2'>
+                                    <Download className='h-5 w-5' />
+                                    Data Management
+                                </CardTitle>
+                                <CardDescription>
+                                    Export or delete your journal data
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className='space-y-4'>
+                                <div className='flex items-center justify-between p-4 border border-border rounded-lg'>
+                                    <div>
+                                        <Shimmer className='h-4 w-24 rounded mb-2' />
+                                        <Shimmer className='h-3 w-40 rounded' />
+                                    </div>
+                                    <Shimmer className='h-10 w-20 rounded' />
+                                </div>
+                                <div className='flex items-center justify-between p-4 border border-destructive/20 rounded-lg bg-destructive/5'>
+                                    <div>
+                                        <Shimmer className='h-4 w-28 rounded mb-2' />
+                                        <Shimmer className='h-3 w-48 rounded' />
+                                    </div>
+                                    <Shimmer className='h-10 w-24 rounded' />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
     return (
         <div className='min-h-screen bg-gradient-to-br from-background to-secondary-soft'>
             <header className='border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
@@ -149,16 +308,18 @@ export default function Settings() {
                         </div>
                     </div>
                     <div className='flex items-center gap-4'>
-                        <span className='text-sm text-muted-foreground'>
+                        <span className='text-sm text-muted-foreground hidden sm:block'>
                             Hello, {user?.name.split(' ')[0]}
                         </span>
                         <ThemeToggle />
                         <Button
                             variant='ghost'
-                            onClick={logout}
+                            onClick={() => setShowLogoutModal(true)}
                             className='text-muted-foreground hover:text-foreground'
+                            size='sm'
                         >
-                            Logout
+                            <span className='hidden sm:inline'>Logout</span>
+                            <span className='sm:hidden'>Exit</span>
                         </Button>
                     </div>
                 </div>
@@ -189,6 +350,8 @@ export default function Settings() {
                                             setName(e.target.value)
                                         }
                                         placeholder='Enter your full name'
+                                        aria-describedby='name-description'
+                                        aria-label='Full name input field'
                                     />
                                 </div>
                                 <div className='space-y-2'>
@@ -200,13 +363,16 @@ export default function Settings() {
                                         onChange={(e) =>
                                             setEmail(e.target.value)
                                         }
-                                        placeholder='Enter your email'
+                                        placeholder='Enter your email address'
+                                        aria-describedby='email-description'
+                                        aria-label='Email address input field'
                                     />
                                 </div>
                             </div>
                             <Button
                                 onClick={handleSaveProfile}
                                 disabled={isLoading}
+                                aria-label='Save profile changes'
                             >
                                 <Save className='w-4 h-4 mr-2' />
                                 {isLoading ? 'Saving...' : 'Save Profile'}
@@ -302,6 +468,73 @@ export default function Settings() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className='space-y-6'>
+                            <div className='space-y-6'>
+                                <div className='space-y-2'>
+                                    <Label>Theme Preference</Label>
+                                    <p className='text-sm text-muted-foreground'>
+                                        Choose your preferred theme for the application
+                                    </p>
+                                    <Select
+                                        value={themePreference}
+                                        onValueChange={setThemePreference}
+                                        disabled={themeLoading}
+                                    >
+                                        <SelectTrigger className='w-48'>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value='light'>
+                                                ☀️ Light
+                                            </SelectItem>
+                                            <SelectItem value='dark'>
+                                                🌙 Dark
+                                            </SelectItem>
+                                            <SelectItem value='system'>
+                                                💻 System
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className='space-y-2'>
+                                    <Label>Color Theme</Label>
+                                    <p className='text-sm text-muted-foreground'>
+                                        Choose your preferred color palette
+                                    </p>
+                                    <Select
+                                        value={colorTheme}
+                                        onValueChange={setColorTheme}
+                                        disabled={themeLoading}
+                                    >
+                                        <SelectTrigger className='w-48'>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value='sage'>
+                                                🌿 Sage Green
+                                            </SelectItem>
+                                            <SelectItem value='ocean'>
+                                                🌊 Ocean Blue
+                                            </SelectItem>
+                                            <SelectItem value='sunset'>
+                                                🌅 Sunset Orange
+                                            </SelectItem>
+                                            <SelectItem value='lavender'>
+                                                💜 Lavender Purple
+                                            </SelectItem>
+                                            <SelectItem value='rose'>
+                                                🌹 Rose Pink
+                                            </SelectItem>
+                                            <SelectItem value='mono'>
+                                                ⚫ Monochrome
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <Separator />
+
                             <div className='flex items-center justify-between'>
                                 <div className='space-y-0.5'>
                                     <Label>Auto-save Drafts</Label>
@@ -376,48 +609,6 @@ export default function Settings() {
                         </CardContent>
                     </Card>
 
-                    {/* Privacy & Security */}
-                    {/* <Card className='shadow-elegant'>
-                        <CardHeader>
-                            <CardTitle className='flex items-center gap-2'>
-                                <Shield className='h-5 w-5' />
-                                Privacy & Security
-                            </CardTitle>
-                            <CardDescription>
-                                Control your data and privacy settings
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className='space-y-6'>
-                            <div className='flex items-center justify-between'>
-                                <div className='space-y-0.5'>
-                                    <Label>Analytics</Label>
-                                    <p className='text-sm text-muted-foreground'>
-                                        Help improve the app by sharing usage
-                                        analytics
-                                    </p>
-                                </div>
-                                <Switch
-                                    checked={enableAnalytics}
-                                    onCheckedChange={setEnableAnalytics}
-                                />
-                            </div>
-
-                            <div className='flex items-center justify-between'>
-                                <div className='space-y-0.5'>
-                                    <Label>Anonymous Data Sharing</Label>
-                                    <p className='text-sm text-muted-foreground'>
-                                        Share anonymized writing patterns for
-                                        research
-                                    </p>
-                                </div>
-                                <Switch
-                                    checked={shareAnonymousData}
-                                    onCheckedChange={setShareAnonymousData}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card> */}
-
                     {/* Data Management */}
                     <Card className='shadow-elegant'>
                         <CardHeader>
@@ -471,6 +662,19 @@ export default function Settings() {
                     </Card>
                 </div>
             </main>
+
+            <ConfirmationModal
+                isOpen={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={() => {
+                    logout();
+                    setShowLogoutModal(false);
+                }}
+                title='Logout'
+                description='Are you sure you want to logout?'
+                confirmText='Logout'
+                cancelText='Cancel'
+            />
         </div>
     );
 }

@@ -1,0 +1,471 @@
+/* Color Theme System for Memora Journal */
+
+/* Default Theme - Sage Green (restored original) */
+:root[data-color-theme="sage"] {
+  /* Light mode colors - using original sage palette */
+  --background: 0 0% 100%;
+  --foreground: 210 11% 15%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 210 11% 15%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 11% 15%;
+  
+  /* Original sage green primary palette */
+  --primary: 151 25% 35%;
+  --primary-foreground: 0 0% 100%;
+  --primary-soft: 151 25% 92%;
+  --primary-hover: 151 25% 30%;
+  
+  /* Warm secondary palette */
+  --secondary: 210 11% 96%;
+  --secondary-foreground: 210 11% 15%;
+  --secondary-soft: 210 11% 98%;
+  
+  /* Improved muted tones for better contrast (WCAG AA compliant) */
+  --muted: 210 11% 96%;
+  --muted-foreground: 210 8% 35%;
+  
+  /* Accent colors */
+  --accent: 151 25% 92%;
+  --accent-foreground: 151 25% 15%;
+  
+  /* Status colors (WCAG AA compliant) */
+  --destructive: 0 75% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 142 70% 40%;
+  --warning: 38 95% 45%;
+  
+  /* UI elements with better contrast */
+  --border: 210 11% 90%;
+  --input: 210 11% 96%;
+  --ring: 151 25% 35%;
+  
+  /* Sage theme gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(151 25% 35%), hsl(151 25% 45%));
+  --gradient-hover: linear-gradient(135deg, hsl(151 25% 30%), hsl(151 25% 40%));
+
+  --radius: 0.75rem;
+}
+
+:root[data-color-theme="sage"].dark {
+  /* Dark mode colors - enhanced for better contrast */
+  --background: 210 11% 8%;
+  --foreground: 0 0% 95%;
+  
+  --card: 210 11% 10%;
+  --card-foreground: 0 0% 95%;
+  
+  --popover: 210 11% 10%;
+  --popover-foreground: 0 0% 95%;
+  
+  /* Enhanced sage green for dark mode */
+  --primary: 151 35% 55%;
+  --primary-foreground: 210 11% 8%;
+  --primary-soft: 151 25% 15%;
+  --primary-hover: 151 35% 60%;
+  
+  /* Improved secondary colors */
+  --secondary: 210 11% 15%;
+  --secondary-foreground: 0 0% 95%;
+  --secondary-soft: 210 11% 12%;
+  
+  /* Better muted tones for dark mode */
+  --muted: 210 11% 15%;
+  --muted-foreground: 210 8% 65%;
+  
+  /* Enhanced accent for dark mode */
+  --accent: 151 25% 20%;
+  --accent-foreground: 0 0% 95%;
+  
+  /* Status colors optimized for dark mode */
+  --destructive: 0 65% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 142 60% 55%;
+  --warning: 38 85% 65%;
+  
+  /* UI elements with better dark mode contrast */
+  --border: 210 11% 20%;
+  --input: 210 11% 18%;
+  --ring: 151 35% 55%;
+
+  /* Sage theme dark gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(151 35% 55%), hsl(151 35% 65%));
+  --gradient-hover: linear-gradient(135deg, hsl(151 35% 60%), hsl(151 35% 70%));
+}
+
+/* Ocean Blue Theme */
+:root[data-color-theme="ocean"] {
+  /* Light mode colors */
+  --background: 0 0% 100%;
+  --foreground: 210 11% 15%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 210 11% 15%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 11% 15%;
+  
+  --primary: 210 100% 45%;
+  --primary-foreground: 0 0% 98%;
+  --primary-hover: 210 100% 40%;
+  
+  --secondary: 210 40% 95%;
+  --secondary-foreground: 210 100% 25%;
+  --secondary-soft: 210 40% 97%;
+  
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 13% 65%;
+  
+  --accent: 210 60% 92%;
+  --accent-foreground: 210 100% 30%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 210 100% 45%;
+
+  /* Ocean theme gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(210 100% 45%), hsl(210 100% 55%));
+  --gradient-hover: linear-gradient(135deg, hsl(210 100% 40%), hsl(210 100% 50%));
+}
+
+:root[data-color-theme="ocean"].dark {
+  /* Dark mode colors */
+  --background: 210 30% 8%;
+  --foreground: 0 0% 95%;
+  
+  --card: 210 30% 10%;
+  --card-foreground: 0 0% 95%;
+  
+  --popover: 210 30% 10%;
+  --popover-foreground: 0 0% 95%;
+  
+  --primary: 210 100% 55%;
+  --primary-foreground: 210 30% 8%;
+  --primary-hover: 210 100% 50%;
+  
+  --secondary: 210 30% 15%;
+  --secondary-foreground: 0 0% 95%;
+  --secondary-soft: 210 30% 12%;
+  
+  --muted: 210 30% 15%;
+  --muted-foreground: 215 13% 75%;
+  
+  --accent: 210 60% 25%;
+  --accent-foreground: 0 0% 95%;
+  
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --border: 210 30% 20%;
+  --input: 210 30% 20%;
+  --ring: 210 100% 55%;
+
+  /* Ocean theme dark gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(210 100% 55%), hsl(210 100% 65%));
+  --gradient-hover: linear-gradient(135deg, hsl(210 100% 60%), hsl(210 100% 70%));
+}
+
+/* Sunset Orange Theme */
+:root[data-color-theme="sunset"] {
+  /* Light mode colors */
+  --background: 0 0% 100%;
+  --foreground: 210 11% 15%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 210 11% 15%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 11% 15%;
+  
+  --primary: 25 95% 53%;
+  --primary-foreground: 0 0% 98%;
+  --primary-hover: 25 95% 48%;
+  
+  --secondary: 25 40% 95%;
+  --secondary-foreground: 25 95% 25%;
+  --secondary-soft: 25 40% 97%;
+  
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 13% 65%;
+  
+  --accent: 25 60% 92%;
+  --accent-foreground: 25 95% 30%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 25 95% 53%;
+
+  /* Sunset theme gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 95% 63%));
+  --gradient-hover: linear-gradient(135deg, hsl(25 95% 48%), hsl(25 95% 58%));
+}
+
+:root[data-color-theme="sunset"].dark {
+  /* Dark mode colors */
+  --background: 25 20% 8%;
+  --foreground: 0 0% 95%;
+  
+  --card: 25 20% 10%;
+  --card-foreground: 0 0% 95%;
+  
+  --popover: 25 20% 10%;
+  --popover-foreground: 0 0% 95%;
+  
+  --primary: 25 95% 60%;
+  --primary-foreground: 25 20% 8%;
+  --primary-hover: 25 95% 55%;
+  
+  --secondary: 25 20% 15%;
+  --secondary-foreground: 0 0% 95%;
+  --secondary-soft: 25 20% 12%;
+  
+  --muted: 25 20% 15%;
+  --muted-foreground: 215 13% 75%;
+  
+  --accent: 25 60% 25%;
+  --accent-foreground: 0 0% 95%;
+  
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --border: 25 30% 20%;
+  --input: 25 30% 20%;
+  --ring: 25 100% 60%;
+
+  /* Sunset theme dark gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(25 100% 60%), hsl(25 100% 70%));
+  --gradient-hover: linear-gradient(135deg, hsl(25 100% 65%), hsl(25 100% 75%));
+}
+
+/* Lavender Purple Theme */
+:root[data-color-theme="lavender"] {
+  /* Light mode colors */
+  --background: 0 0% 100%;
+  --foreground: 210 11% 15%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 210 11% 15%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 11% 15%;
+  
+  --primary: 270 50% 55%;
+  --primary-foreground: 0 0% 98%;
+  --primary-hover: 270 50% 50%;
+  
+  --secondary: 270 30% 95%;
+  --secondary-foreground: 270 50% 25%;
+  --secondary-soft: 270 30% 97%;
+  
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 13% 65%;
+  
+  --accent: 270 40% 92%;
+  --accent-foreground: 270 50% 30%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --border: 270 20% 91%;
+  --input: 270 20% 91%;
+  --ring: 270 60% 50%;
+
+  /* Lavender theme gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(270 60% 50%), hsl(270 60% 60%));
+  --gradient-hover: linear-gradient(135deg, hsl(270 60% 45%), hsl(270 60% 55%));
+}
+
+:root[data-color-theme="lavender"].dark {
+  /* Dark mode colors */
+  --background: 270 15% 8%;
+  --foreground: 0 0% 95%;
+  
+  --card: 270 15% 10%;
+  --card-foreground: 0 0% 95%;
+  
+  --popover: 270 15% 10%;
+  --popover-foreground: 0 0% 95%;
+  
+  --primary: 270 50% 60%;
+  --primary-foreground: 270 30% 8%;
+  --primary-hover: 270 50% 55%;
+  
+  --secondary: 270 15% 15%;
+  --secondary-foreground: 0 0% 95%;
+  --secondary-soft: 270 15% 12%;
+  
+  --muted: 270 15% 15%;
+  --muted-foreground: 215 13% 75%;
+  
+  --accent: 270 40% 25%;
+  --accent-foreground: 0 0% 95%;
+  
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --border: 270 20% 20%;
+  --input: 270 20% 20%;
+  --ring: 270 60% 60%;
+
+  /* Lavender theme dark gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(270 60% 60%), hsl(270 60% 70%));
+  --gradient-hover: linear-gradient(135deg, hsl(270 60% 65%), hsl(270 60% 75%));
+}
+
+/* Rose Pink Theme */
+:root[data-color-theme="rose"] {
+  /* Light mode colors */
+  --background: 0 0% 100%;
+  --foreground: 210 11% 15%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 210 11% 15%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 11% 15%;
+  
+  --primary: 330 70% 50%;
+  --primary-foreground: 0 0% 98%;
+  --primary-hover: 330 70% 45%;
+  
+  --secondary: 330 30% 95%;
+  --secondary-foreground: 330 70% 25%;
+  --secondary-soft: 330 30% 97%;
+  
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 13% 65%;
+  
+  --accent: 330 50% 92%;
+  --accent-foreground: 330 70% 30%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --border: 350 30% 91%;
+  --input: 350 30% 91%;
+  --ring: 350 70% 50%;
+
+  /* Rose theme gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(350 70% 50%), hsl(350 70% 60%));
+  --gradient-hover: linear-gradient(135deg, hsl(350 70% 45%), hsl(350 70% 55%));
+}
+
+:root[data-color-theme="rose"].dark {
+  /* Dark mode colors */
+  --background: 330 15% 8%;
+  --foreground: 0 0% 95%;
+  
+  --card: 330 15% 10%;
+  --card-foreground: 0 0% 95%;
+  
+  --popover: 330 15% 10%;
+  --popover-foreground: 0 0% 95%;
+  
+  --primary: 330 60% 60%;
+  --primary-foreground: 330 30% 8%;
+  --primary-hover: 330 60% 55%;
+  
+  --secondary: 330 15% 15%;
+  --secondary-foreground: 0 0% 95%;
+  --secondary-soft: 330 15% 12%;
+  
+  --muted: 330 15% 15%;
+  --muted-foreground: 215 13% 75%;
+  
+  --accent: 330 50% 25%;
+  --accent-foreground: 0 0% 95%;
+  
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --border: 350 20% 20%;
+  --input: 350 20% 20%;
+  --ring: 350 70% 60%;
+
+  /* Rose theme dark gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(350 70% 60%), hsl(350 70% 70%));
+  --gradient-hover: linear-gradient(135deg, hsl(350 70% 65%), hsl(350 70% 75%));
+}
+
+/* Monochrome Theme */
+:root[data-color-theme="mono"] {
+  /* Light mode colors */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 15%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 15%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 15%;
+  
+  --primary: 0 0% 25%;
+  --primary-foreground: 0 0% 98%;
+  --primary-hover: 0 0% 20%;
+  
+  --secondary: 0 0% 95%;
+  --secondary-foreground: 0 0% 25%;
+  --secondary-soft: 0 0% 97%;
+  
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 65%;
+  
+  --accent: 0 0% 92%;
+  --accent-foreground: 0 0% 30%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --border: 0 0% 91%;
+  --input: 0 0% 91%;
+  --ring: 0 0% 40%;
+
+  /* Monochrome theme gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(0 0% 40%), hsl(0 0% 50%));
+  --gradient-hover: linear-gradient(135deg, hsl(0 0% 35%), hsl(0 0% 45%));
+}
+
+:root[data-color-theme="mono"].dark {
+  /* Dark mode colors */
+  --background: 0 0% 8%;
+  --foreground: 0 0% 95%;
+  
+  --card: 0 0% 10%;
+  --card-foreground: 0 0% 95%;
+  
+  --popover: 0 0% 10%;
+  --popover-foreground: 0 0% 95%;
+  
+  --primary: 0 0% 80%;
+  --primary-foreground: 0 0% 8%;
+  --primary-hover: 0 0% 75%;
+  
+  --secondary: 0 0% 15%;
+  --secondary-foreground: 0 0% 95%;
+  --secondary-soft: 0 0% 12%;
+  
+  --muted: 0 0% 15%;
+  --muted-foreground: 0 0% 75%;
+  
+  --accent: 0 0% 25%;
+  --accent-foreground: 0 0% 95%;
+  
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --border: 0 0% 20%;
+  --input: 0 0% 20%;
+  --ring: 0 0% 60%;
+
+  /* Monochrome theme dark gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(0 0% 60%), hsl(0 0% 70%));
+  --gradient-hover: linear-gradient(135deg, hsl(0 0% 65%), hsl(0 0% 75%));
+}

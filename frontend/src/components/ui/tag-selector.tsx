@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus } from 'lucide-react';
+import { devLog } from '@/config/api';
 
 interface TagSelectorProps {
   selectedTags: string[];
@@ -27,8 +28,13 @@ export function TagSelector({ selectedTags, onChange }: TagSelectorProps) {
   );
 
   const addTag = (tag: string) => {
+    devLog('addTag called with:', tag);
+    devLog('selectedTags:', selectedTags);
     if (tag && !selectedTags.includes(tag)) {
+      devLog('Adding tag:', tag);
       onChange([...selectedTags, tag]);
+    } else {
+      devLog('Tag not added - empty or duplicate');
     }
     setInputValue('');
     setShowSuggestions(false);
@@ -42,11 +48,28 @@ export function TagSelector({ selectedTags, onChange }: TagSelectorProps) {
     if (e.key === 'Enter' && inputValue.trim()) {
       e.preventDefault();
       addTag(inputValue.trim());
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setInputValue('');
     }
   };
 
+  // Close suggestions when clicking outside
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" ref={containerRef}>
       {/* Selected Tags */}
       {selectedTags.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -82,11 +105,15 @@ export function TagSelector({ selectedTags, onChange }: TagSelectorProps) {
           />
           <Button
             variant="outline"
-            size="icon-sm"
-            onClick={() => addTag(inputValue.trim())}
+            size="sm"
+            onClick={() => {
+              devLog('Plus button clicked, inputValue:', inputValue);
+              addTag(inputValue.trim());
+            }}
             disabled={!inputValue.trim()}
+            className="px-3"
           >
-            <Plus className="h-3 w-3" />
+            <Plus className="h-4 w-4" />
           </Button>
         </div>
 

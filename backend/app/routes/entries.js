@@ -7,15 +7,17 @@ import {
     deleteEntry,
 } from '../controllers/entryController.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
+import { validateRequest, validateQuery } from '../middleware/validation.js';
+import { createEntrySchema, updateEntrySchema, getEntriesSchema } from '../schemas/entrySchemas.js';
 
 const router = express.Router();
 
 router.use(authenticateToken); // Protect all entry routes
 
-router.post('/', createEntry);
+router.post('/', validateRequest(createEntrySchema), createEntry);
 router.get('/', getEntries);
 router.get('/:id', getEntryById);
-router.put('/:id', updateEntry);
+router.put('/:id', validateRequest(updateEntrySchema), updateEntry);
 router.delete('/:id', deleteEntry);
 
 export default router;

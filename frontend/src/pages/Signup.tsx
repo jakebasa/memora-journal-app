@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import {
     Card,
@@ -79,7 +80,7 @@ const Signup = () => {
     return (
         <div className='min-h-screen bg-background flex'>
             {/* Left side - Hero image and branding */}
-            <div className='hidden lg:flex lg:flex-1 relative'>
+            <div className='hidden lg:flex lg:w-1/2 xl:w-3/5 relative'>
                 <img
                     src={journalHero}
                     alt='Journal'
@@ -101,7 +102,7 @@ const Signup = () => {
             </div>
 
             {/* Right side - Signup form */}
-            <div className='flex-1 lg:flex-none lg:w-96 xl:w-[480px] flex flex-col'>
+            <div className='flex-1 lg:w-1/2 xl:w-2/5 flex flex-col'>
                 <div className='flex justify-end p-6'>
                     <ThemeToggle />
                 </div>
@@ -164,9 +165,8 @@ const Signup = () => {
                                         <Label htmlFor='password'>
                                             Password
                                         </Label>
-                                        <Input
+                                        <PasswordInput
                                             id='password'
-                                            type='password'
                                             placeholder='••••••••'
                                             value={password}
                                             onChange={(e) =>
@@ -181,9 +181,8 @@ const Signup = () => {
                                         <Label htmlFor='confirmPassword'>
                                             Confirm Password
                                         </Label>
-                                        <Input
+                                        <PasswordInput
                                             id='confirmPassword'
-                                            type='password'
                                             placeholder='••••••••'
                                             value={confirmPassword}
                                             onChange={(e) =>

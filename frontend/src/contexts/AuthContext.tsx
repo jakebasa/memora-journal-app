@@ -1,19 +1,21 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { buildApiUrl } from '@/config/api';
+import { clearEntriesCache } from '@/hooks/useEntries';
 
 interface User {
     id: string;
-    email: string;
     name: string;
+    email: string;
 }
 
 interface AuthContextType {
     user: User | null;
-    token: string | null; // ✅ Add token here
+    token: string | null;
     login: (email: string, password: string) => Promise<void>;
-    signup: (email: string, password: string, name: string) => Promise<void>;
+    signup: (name: string, email: string, password: string) => Promise<void>;
     logout: () => void;
-    isAuthenticated: boolean;
     loading: boolean;
+    isAuthenticated: boolean;
     error: string | null;
 }
 
@@ -21,7 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (!context) {
+    if (context === undefined) {
         throw new Error('useAuth must be used within an AuthProvider');
     }
     return context;
@@ -31,11 +33,9 @@ interface AuthProviderProps {
     children: React.ReactNode;
 }
 
-const BACKEND_URL = 'http://localhost:5000'; // replace with your backend URL
-
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(null); // ✅ store token
+    const [token, setToken] = useState<string | null>(null); // store token
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -43,15 +43,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+            const response = await fetch(buildApiUrl('/api/auth/login'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
 
-            const data = await res.json();
+            const data = await response.json();
 
-            if (!res.ok) {
+            if (!response.ok) {
                 throw new Error(data.message || 'Login failed');
             }
 
@@ -71,18 +71,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
-    const signup = async (email: string, password: string, name: string) => {
+    const signup = async (name: string, email: string, password: string) => {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`${BACKEND_URL}/api/auth/signup`, {
+            const response = await fetch(buildApiUrl('/api/auth/signup'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, name }),
+                body: JSON.stringify({ name, email, password }),
             });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Signup failed');
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Signup failed');
 
             setUser({
                 id: data.user.id,
@@ -101,6 +101,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     const logout = () => {
+        // Clear entries cache for current user before logout
+        if (user) {
+            clearEntriesCache(user.id);
+        }
+        
         setUser(null);
         setToken(null); // ✅ clear token
         localStorage.removeItem('journal-user');
