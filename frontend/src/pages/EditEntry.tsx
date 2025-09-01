@@ -18,8 +18,22 @@ import { Shimmer, ShimmerText } from '@/components/ui/shimmer';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
-import { ArrowLeft, Save, Trash2, Calendar, Clock, Image as ImageIcon, Sparkles, Eye } from 'lucide-react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+    ArrowLeft,
+    Save,
+    Trash2,
+    Calendar,
+    Clock,
+    Image as ImageIcon,
+    Sparkles,
+    Eye,
+} from 'lucide-react';
+import {
+    Link,
+    useNavigate,
+    useParams,
+    useSearchParams,
+} from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useEntries } from '@/hooks/useEntries';
 import { buildApiUrl } from '@/config/api';
@@ -51,7 +65,7 @@ export default function EditEntry() {
     const [searchParams] = useSearchParams();
     const { toast } = useToast();
     const { invalidateCache } = useEntries();
-    
+
     const from = searchParams.get('from') || 'browse';
 
     const [entry, setEntry] = useState<JournalEntry | null>(null);
@@ -59,21 +73,24 @@ export default function EditEntry() {
     const [content, setContent] = useState('');
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [selectedMood, setSelectedMood] = useState('');
-    const [images, setImages] = useState<{
-        url: string;
-        publicId: string;
-        width: number;
-        height: number;
-        format: string;
-        bytes: number;
-        originalName: string;
-        alt?: string;
-        uploadedAt?: string;
-    }[]>([]);
+    const [images, setImages] = useState<
+        {
+            url: string;
+            publicId: string;
+            width: number;
+            height: number;
+            format: string;
+            bytes: number;
+            originalName: string;
+            alt?: string;
+            uploadedAt?: string;
+        }[]
+    >([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [showPromptPanel, setShowPromptPanel] = useState(false);
+    const [selectedPrompt, setSelectedPrompt] = useState<string>('');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -161,11 +178,11 @@ export default function EditEntry() {
                     content,
                     tags: selectedTags,
                     mood: selectedMood,
-                    images: images.map(img => ({
+                    images: images.map((img) => ({
                         url: img.url,
                         publicId: img.publicId,
                         alt: img.alt || '',
-                        uploadedAt: img.uploadedAt || new Date().toISOString()
+                        uploadedAt: img.uploadedAt || new Date().toISOString(),
                     })),
                 }),
             });
@@ -175,7 +192,7 @@ export default function EditEntry() {
 
             // Invalidate cache to refresh dashboard
             invalidateCache();
-            
+
             toast({
                 title: 'Entry Updated',
                 description:
@@ -211,7 +228,7 @@ export default function EditEntry() {
 
             // Invalidate cache to refresh dashboard
             invalidateCache();
-            
+
             toast({
                 title: 'Entry Deleted',
                 description: 'Your journal entry has been permanently deleted.',
@@ -235,7 +252,7 @@ export default function EditEntry() {
     };
 
     const handlePromptSelect = (prompt: string) => {
-        setContent((prev) => (prev ? prev + '\n\n' + prompt : prompt));
+        setSelectedPrompt(prompt);
         setShowPromptPanel(false);
     };
 
@@ -248,7 +265,13 @@ export default function EditEntry() {
                             <Button
                                 variant='ghost'
                                 size='icon'
-                                onClick={() => navigate(from === 'dashboard' ? '/dashboard' : '/browse')}
+                                onClick={() =>
+                                    navigate(
+                                        from === 'dashboard'
+                                            ? '/dashboard'
+                                            : '/browse'
+                                    )
+                                }
                                 className='hover:bg-secondary-soft'
                             >
                                 <ArrowLeft className='h-4 w-4' />
@@ -299,9 +322,14 @@ export default function EditEntry() {
                                     <div className='space-y-4 p-6'>
                                         {/* Toolbar shimmer */}
                                         <div className='flex gap-2 p-2 border rounded'>
-                                            {Array.from({ length: 8 }).map((_, i) => (
-                                                <Shimmer key={i} className='h-8 w-8 rounded' />
-                                            ))}
+                                            {Array.from({ length: 8 }).map(
+                                                (_, i) => (
+                                                    <Shimmer
+                                                        key={i}
+                                                        className='h-8 w-8 rounded'
+                                                    />
+                                                )
+                                            )}
                                         </div>
                                         {/* Editor content shimmer */}
                                         <div className='min-h-[400px] p-4 border rounded'>
@@ -324,15 +352,24 @@ export default function EditEntry() {
                                 </CardHeader>
                                 <CardContent className='space-y-6'>
                                     <div>
-                                        <Label className='mb-2 block'>Mood</Label>
+                                        <Label className='mb-2 block'>
+                                            Mood
+                                        </Label>
                                         <div className='flex flex-wrap gap-2'>
-                                            {Array.from({ length: 6 }).map((_, i) => (
-                                                <Shimmer key={i} className='h-10 w-16 rounded-full' />
-                                            ))}
+                                            {Array.from({ length: 6 }).map(
+                                                (_, i) => (
+                                                    <Shimmer
+                                                        key={i}
+                                                        className='h-10 w-16 rounded-full'
+                                                    />
+                                                )
+                                            )}
                                         </div>
                                     </div>
                                     <div>
-                                        <Label className='mb-2 block'>Tags</Label>
+                                        <Label className='mb-2 block'>
+                                            Tags
+                                        </Label>
                                         <div className='space-y-2'>
                                             <Shimmer className='h-10 w-full rounded' />
                                             <div className='flex gap-2'>
@@ -391,7 +428,13 @@ export default function EditEntry() {
                         <Button
                             variant='ghost'
                             size='icon'
-                            onClick={() => navigate(from === 'dashboard' ? '/dashboard' : `/entries/${entry._id}`)}
+                            onClick={() =>
+                                navigate(
+                                    from === 'dashboard'
+                                        ? '/dashboard'
+                                        : `/entries/${entry._id}`
+                                )
+                            }
                             className='hover:bg-secondary-soft'
                         >
                             <ArrowLeft className='h-4 w-4' />
@@ -441,27 +484,15 @@ export default function EditEntry() {
                                     >
                                         Entry Title
                                     </Label>
-                                    <div className='relative'>
-                                        <Input
-                                            id='title'
-                                            value={title}
-                                            onChange={(e) =>
-                                                setTitle(e.target.value)
-                                            }
-                                            placeholder='Give your entry a title...'
-                                            className='text-xl font-semibold pr-10'
-                                        />
-                                        {/* <Button
-                                            variant='ghost'
-                                            size='icon'
-                                            className='absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-primary hover:text-primary-hover'
-                                            onClick={() =>
-                                                setShowPromptPanel(true)
-                                            }
-                                        >
-                                            <Sparkles className='h-4 w-4' />
-                                        </Button> */}
-                                    </div>
+                                    <Input
+                                        id='title'
+                                        value={title}
+                                        onChange={(e) =>
+                                            setTitle(e.target.value)
+                                        }
+                                        placeholder='Give your entry a title...'
+                                        className='text-xl font-semibold'
+                                    />
                                     <div className='flex items-center gap-2 text-xs text-muted-foreground'>
                                         <span>
                                             Created{' '}
@@ -486,23 +517,74 @@ export default function EditEntry() {
                                     </div>
                                 </div>
                             </CardHeader>
-                            <CardContent className='p-0'>
-                                <div className='relative'>
-                                    <RichTextEditor
-                                        content={content}
-                                        onChange={setContent}
-                                        placeholder='Start writing your thoughts...'
-                                    />
+                        </Card>
+
+                        {/* Content Editor */}
+                        <Card className='shadow-elegant border border-border/40'>
+                            <CardHeader>
+                                <div className='flex items-center justify-between'>
+                                    <div>
+                                        <CardTitle className='text-lg font-medium'>
+                                            Your Thoughts
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Express yourself freely with rich
+                                            text formatting
+                                        </CardDescription>
+                                    </div>
                                     <Button
-                                        variant='secondary'
-                                        size='sm'
-                                        className='absolute top-3 right-3 shadow-sm'
+                                        variant='ghost'
                                         onClick={() => setShowPromptPanel(true)}
+                                        className='flex items-center gap-2 text-primary hover:text-primary-hover'
+                                        size='sm'
                                     >
-                                        <Sparkles className='h-4 w-4 mr-1' />
-                                        Prompts
+                                        <Sparkles className='h-4 w-4' />
+                                        Writing Prompts
                                     </Button>
                                 </div>
+                            </CardHeader>
+                            <CardContent className='p-0'>
+                                {selectedPrompt && (
+                                    <div className='m-6 mb-4 p-3 bg-primary/5 border border-primary/20 rounded-lg'>
+                                        <div className='flex items-start gap-2'>
+                                            <Sparkles className='h-4 w-4 text-primary mt-0.5 flex-shrink-0' />
+                                            <div className='flex-1'>
+                                                <div className='flex items-center justify-between'>
+                                                    <p className='text-sm font-medium text-primary mb-1'>
+                                                        Writing Prompt:
+                                                    </p>
+                                                    <Button
+                                                        variant='ghost'
+                                                        size='icon'
+                                                        onClick={() =>
+                                                            setSelectedPrompt(
+                                                                ''
+                                                            )
+                                                        }
+                                                        className='h-6 w-6 text-muted-foreground hover:text-foreground'
+                                                    >
+                                                        <span className='sr-only'>
+                                                            Remove prompt
+                                                        </span>
+                                                        ✕
+                                                    </Button>
+                                                </div>
+                                                <p className='text-sm text-foreground'>
+                                                    {selectedPrompt}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                <RichTextEditor
+                                    content={content}
+                                    onChange={setContent}
+                                    placeholder={
+                                        selectedPrompt
+                                            ? 'Share your thoughts about this prompt...'
+                                            : 'Express your thoughts and feelings...'
+                                    }
+                                />
                             </CardContent>
                         </Card>
                     </div>
@@ -539,13 +621,15 @@ export default function EditEntry() {
                             <CardHeader>
                                 <CardTitle className='text-lg font-medium flex items-center gap-2'>
                                     <ImageIcon className='w-5 h-5' />
-                                    Images {images.length > 0 && `(${images.length})`}
+                                    Images{' '}
+                                    {images.length > 0 && `(${images.length})`}
                                 </CardTitle>
                                 <CardDescription>
-                                    {images.length === 0 
-                                        ? 'Add photos to capture your memories' 
-                                        : `Managing ${images.length} image${images.length > 1 ? 's' : ''} • Up to 5 images allowed`
-                                    }
+                                    {images.length === 0
+                                        ? 'Add photos to capture your memories'
+                                        : `Managing ${images.length} image${
+                                              images.length > 1 ? 's' : ''
+                                          } • Up to 5 images allowed`}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -602,7 +686,7 @@ export default function EditEntry() {
                 onClose={() => setShowPromptPanel(false)}
                 onSelectPrompt={handlePromptSelect}
             />
-            
+
             <ConfirmationModal
                 isOpen={showDeleteModal}
                 onClose={() => setShowDeleteModal(false)}
@@ -613,7 +697,7 @@ export default function EditEntry() {
                 cancelText='Cancel'
                 variant='destructive'
             />
-            
+
             <ConfirmationModal
                 isOpen={showLogoutModal}
                 onClose={() => setShowLogoutModal(false)}

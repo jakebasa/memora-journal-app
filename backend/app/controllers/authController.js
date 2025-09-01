@@ -15,11 +15,16 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         service: 'gmail',
         auth: {
             user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-        }
+            pass: process.env.EMAIL_PASS,
+        },
     });
 } else {
-    console.warn('Email credentials not configured. EMAIL_USER:', !!process.env.EMAIL_USER, 'EMAIL_PASS:', !!process.env.EMAIL_PASS);
+    console.warn(
+        'Email credentials not configured. EMAIL_USER:',
+        !!process.env.EMAIL_USER,
+        'EMAIL_PASS:',
+        !!process.env.EMAIL_PASS
+    );
 }
 
 // Alternative: SendGrid configuration (uncomment to use)
@@ -38,6 +43,7 @@ export const signup = async (req, res) => {
 
         const token = jwt.sign(
             { id: user._id, email, name }, // include name in token payload
+            process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
@@ -97,9 +103,12 @@ export const forgotPassword = async (req, res) => {
 
         // Send email if transporter is configured
         if (!transporter) {
-            console.error('Email not configured - password reset token generated but email not sent');
-            return res.status(200).json({ 
-                message: 'If an account with that email exists, we have sent a password reset link.' 
+            console.error(
+                'Email not configured - password reset token generated but email not sent'
+            );
+            return res.status(200).json({
+                message:
+                    'If an account with that email exists, we have sent a password reset link.',
             });
         }
 

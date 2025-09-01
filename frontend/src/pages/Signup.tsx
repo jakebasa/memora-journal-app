@@ -60,7 +60,7 @@ const Signup = () => {
 
         setIsLoading(true);
         try {
-            await signup(email, password, name);
+            await signup(name, email, password);
             toast({
                 title: 'Welcome to Memora!',
                 description: 'Your account has been created successfully.',

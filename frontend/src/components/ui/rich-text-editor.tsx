@@ -18,13 +18,42 @@ export function RichTextEditor({
 
     useEffect(() => {
         if (editorRef.current && editorRef.current.innerHTML !== content) {
-            editorRef.current.innerHTML = content;
+            editorRef.current.innerHTML = content || '';
+        }
+    }, [content]);
+
+    // Add class to show placeholder when empty
+    useEffect(() => {
+        if (editorRef.current) {
+            const isEmpty =
+                !editorRef.current.innerHTML ||
+                editorRef.current.innerHTML === '<br>' ||
+                editorRef.current.innerHTML === '<div><br></div>' ||
+                editorRef.current.innerHTML.trim() === '';
+
+            if (isEmpty) {
+                editorRef.current.classList.add('is-empty');
+            } else {
+                editorRef.current.classList.remove('is-empty');
+            }
         }
     }, [content]);
 
     const handleInput = () => {
         if (editorRef.current) {
-            onChange(editorRef.current.innerHTML);
+            const content = editorRef.current.innerHTML;
+            onChange(content);
+            // Check if content is empty and update the is-empty class
+            const isEmpty =
+                !content ||
+                content === '<br>' ||
+                content === '<div><br></div>' ||
+                content.trim() === '';
+            if (isEmpty) {
+                editorRef.current.classList.add('is-empty');
+            } else {
+                editorRef.current.classList.remove('is-empty');
+            }
         }
     };
 
@@ -74,7 +103,7 @@ export function RichTextEditor({
                 ref={editorRef}
                 contentEditable
                 className={`
-          min-h-[300px] p-4 bg-background text-foreground outline-none
+          relative min-h-[300px] p-4 bg-background text-foreground outline-none
           editor-content custom-scroll prose prose-sm
           ${isFocused ? 'ring-2 ring-ring/20' : ''}
         `}
@@ -91,11 +120,15 @@ export function RichTextEditor({
             <style
                 dangerouslySetInnerHTML={{
                     __html: `
-          [contenteditable][data-placeholder]:empty:before {
+          [contenteditable][data-placeholder].is-empty:before {
             content: attr(data-placeholder);
             color: hsl(var(--muted-foreground));
+            position: absolute;
             pointer-events: none;
             display: block;
+            left: 1rem;
+            right: 1rem;
+            top: 1rem;
           }
           .editor-content ul {
             list-style-type: disc;

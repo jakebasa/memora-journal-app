@@ -54,25 +54,28 @@ const NewEntry = () => {
     const [content, setContent] = useState('');
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [selectedMood, setSelectedMood] = useState(''); // stores mood "value" (e.g. "happy")
-    const [images, setImages] = useState<{
-        url: string;
-        publicId: string;
-        width: number;
-        height: number;
-        format: string;
-        bytes: number;
-        originalName: string;
-        alt?: string;
-    }[]>([]);
+    const [images, setImages] = useState<
+        {
+            url: string;
+            publicId: string;
+            width: number;
+            height: number;
+            format: string;
+            bytes: number;
+            originalName: string;
+            alt?: string;
+        }[]
+    >([]);
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [showPromptPanel, setShowPromptPanel] = useState(false);
+    const [selectedPrompt, setSelectedPrompt] = useState<string>('');
 
     // Auto-save draft
     useEffect(() => {
         if (!user?.id) return;
-        
+
         const timer = setInterval(() => {
             if (title || content || selectedTags.length > 0 || selectedMood) {
                 const entryData = {
@@ -80,11 +83,11 @@ const NewEntry = () => {
                     content,
                     tags: selectedTags,
                     mood: selectedMood,
-                    images: images.map(img => ({
+                    images: images.map((img) => ({
                         url: img.url,
                         publicId: img.publicId,
                         alt: img.alt || '',
-                        uploadedAt: new Date().toISOString()
+                        uploadedAt: new Date().toISOString(),
                     })),
                 };
                 setLastSaved(new Date());
@@ -107,10 +110,10 @@ const NewEntry = () => {
                 setIsLoading(false);
                 return;
             }
-            
+
             // Simulate loading time for draft loading
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
+            await new Promise((resolve) => setTimeout(resolve, 800));
+
             const savedDraft = localStorage.getItem(`journal-draft-${user.id}`);
             if (savedDraft) {
                 try {
@@ -119,14 +122,15 @@ const NewEntry = () => {
                     setContent(draft.content || '');
                     setSelectedTags(draft.selectedTags || []);
                     setSelectedMood(draft.selectedMood || '');
-                    if (draft.lastSaved) setLastSaved(new Date(draft.lastSaved));
+                    if (draft.lastSaved)
+                        setLastSaved(new Date(draft.lastSaved));
                 } catch (err) {
                     console.error('Error loading draft:', err);
                 }
             }
             setIsLoading(false);
         };
-        
+
         loadDraft();
     }, [user?.id]);
 
@@ -146,21 +150,21 @@ const NewEntry = () => {
                 moods.find((m) => m.value === selectedMood)?.emoji || '';
 
             devLog('NewEntry - Sending images to backend:', images);
-            
+
             const requestBody = {
                 title,
                 content,
                 tags: selectedTags,
                 mood: moodEmoji, // ✅ store emoji only
-                images: images.map(img => ({
+                images: images.map((img) => ({
                     url: img.url,
                     publicId: img.publicId,
                     alt: img.alt || '',
-                    uploadedAt: new Date().toISOString()
+                    uploadedAt: new Date().toISOString(),
                 })),
                 date: new Date().toISOString(),
             };
-            
+
             // devLog('NewEntry - Full request body:', requestBody);
 
             const res = await fetch(buildApiUrl('/api/entries'), {
@@ -172,17 +176,17 @@ const NewEntry = () => {
                 body: JSON.stringify(requestBody),
             });
 
-            const data = await res.json() as { message?: string };
+            const data = (await res.json()) as { message?: string };
             if (!res.ok)
                 throw new Error(data.message || 'Failed to save entry');
 
             if (user?.id) {
                 localStorage.removeItem(`journal-draft-${user.id}`);
             }
-            
+
             // Invalidate cache to refresh dashboard
             invalidateCache();
-            
+
             toast({
                 title: 'Entry saved!',
                 description: 'Your journal entry has been saved successfully.',
@@ -191,7 +195,8 @@ const NewEntry = () => {
         } catch (err) {
             toast({
                 title: 'Save failed',
-                description: (err as Error).message || 'Could not save your entry.',
+                description:
+                    (err as Error).message || 'Could not save your entry.',
                 variant: 'destructive',
             });
         } finally {
@@ -200,7 +205,7 @@ const NewEntry = () => {
     };
 
     const handlePromptSelect = (prompt: string) => {
-        setContent(content ? content + '\n\n' + prompt : prompt);
+        setSelectedPrompt(prompt);
         setShowPromptPanel(false);
     };
 
@@ -255,9 +260,14 @@ const NewEntry = () => {
                                     <div className='space-y-2'>
                                         <Label>Mood</Label>
                                         <div className='flex flex-wrap gap-2'>
-                                            {Array.from({ length: 6 }).map((_, i) => (
-                                                <Shimmer key={i} className='h-10 w-20 rounded-full' />
-                                            ))}
+                                            {Array.from({ length: 6 }).map(
+                                                (_, i) => (
+                                                    <Shimmer
+                                                        key={i}
+                                                        className='h-10 w-20 rounded-full'
+                                                    />
+                                                )
+                                            )}
                                         </div>
                                     </div>
                                     <div className='space-y-2'>
@@ -282,16 +292,22 @@ const NewEntry = () => {
                                     Your Thoughts
                                 </CardTitle>
                                 <CardDescription>
-                                    Express yourself freely with rich text formatting
+                                    Express yourself freely with rich text
+                                    formatting
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className='relative'>
                                 <div className='space-y-4'>
                                     {/* Toolbar shimmer */}
                                     <div className='flex gap-2 p-2 border rounded-t'>
-                                        {Array.from({ length: 8 }).map((_, i) => (
-                                            <Shimmer key={i} className='h-8 w-8 rounded' />
-                                        ))}
+                                        {Array.from({ length: 8 }).map(
+                                            (_, i) => (
+                                                <Shimmer
+                                                    key={i}
+                                                    className='h-8 w-8 rounded'
+                                                />
+                                            )
+                                        )}
                                     </div>
                                     {/* Editor content shimmer */}
                                     <div className='min-h-[300px] p-4 border border-t-0 rounded-b'>
@@ -344,12 +360,16 @@ const NewEntry = () => {
                                 {isSaving ? (
                                     <>
                                         <Save className='h-4 w-4 mr-2 animate-spin' />
-                                        <span className='hidden sm:inline'>Saving...</span>
+                                        <span className='hidden sm:inline'>
+                                            Saving...
+                                        </span>
                                     </>
                                 ) : (
                                     <>
                                         <Save className='h-4 w-4 sm:mr-2' />
-                                        <span className='hidden sm:inline'>Save Entry</span>
+                                        <span className='hidden sm:inline'>
+                                            Save Entry
+                                        </span>
                                     </>
                                 )}
                             </Button>
@@ -437,31 +457,67 @@ const NewEntry = () => {
                     {/* Content Editor */}
                     <Card className='shadow-elegant'>
                         <CardHeader className='pb-4'>
-                            <CardTitle className='text-lg font-medium'>
-                                Your Thoughts
-                            </CardTitle>
-                            <CardDescription>
-                                Express yourself freely with rich text
-                                formatting
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className='relative'>
-                            <div className='relative'>
-                                <RichTextEditor
-                                    content={content}
-                                    onChange={setContent}
-                                    placeholder='Start writing your entry here...'
-                                />
+                            <div className='flex items-center justify-between'>
+                                <div>
+                                    <CardTitle className='text-lg font-medium'>
+                                        Your Thoughts
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Express yourself freely with rich text
+                                        formatting
+                                    </CardDescription>
+                                </div>
                                 <Button
                                     variant='ghost'
-                                    size='sm'
-                                    className='absolute top-2 right-2 text-primary hover:text-primary-hover'
                                     onClick={() => setShowPromptPanel(true)}
+                                    className='flex items-center gap-2 text-primary hover:text-primary-hover'
+                                    size='sm'
                                 >
-                                    <Sparkles className='h-4 w-4 mr-1' />
-                                    Prompts
+                                    <Sparkles className='h-4 w-4' />
+                                    Writing Prompts
                                 </Button>
                             </div>
+                        </CardHeader>
+                        <CardContent>
+                            {selectedPrompt && (
+                                <div className='mb-4 p-3 bg-primary/5 border border-primary/20 rounded-lg'>
+                                    <div className='flex items-start gap-2'>
+                                        <Sparkles className='h-4 w-4 text-primary mt-0.5 flex-shrink-0' />
+                                        <div className='flex-1'>
+                                            <div className='flex items-center justify-between'>
+                                                <p className='text-sm font-medium text-primary mb-1'>
+                                                    Writing Prompt:
+                                                </p>
+                                                <Button
+                                                    variant='ghost'
+                                                    size='icon'
+                                                    onClick={() =>
+                                                        setSelectedPrompt('')
+                                                    }
+                                                    className='h-6 w-6 text-muted-foreground hover:text-foreground'
+                                                >
+                                                    <span className='sr-only'>
+                                                        Remove prompt
+                                                    </span>
+                                                    ✕
+                                                </Button>
+                                            </div>
+                                            <p className='text-sm text-foreground'>
+                                                {selectedPrompt}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            <RichTextEditor
+                                content={content}
+                                onChange={setContent}
+                                placeholder={
+                                    selectedPrompt
+                                        ? 'Share your thoughts about this prompt...'
+                                        : 'Express your thoughts and feelings...'
+                                }
+                            />
                         </CardContent>
                     </Card>
                 </div>
