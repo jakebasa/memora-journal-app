@@ -207,31 +207,6 @@ npm run build
 -   `POST /api/ai/period-summary` - Generate period summaries
 -   `POST /api/ai/chat` - AI chat with context
 
-## Architecture
-
-### Frontend Structure
-
-```
-src/
-├── components/ui/          # Reusable UI components
-├── pages/                  # Route components
-├── contexts/              # React contexts (Auth, Chat, etc.)
-├── hooks/                 # Custom React hooks
-├── config/                # Configuration files
-└── assets/                # Static assets
-```
-
-### Backend Structure
-
-```
-app/
-├── controllers/           # Route handlers
-├── middleware/           # Express middleware
-├── models/               # MongoDB schemas
-├── routes/               # API routes
-├── services/             # Business logic
-└── config/               # Configuration
-```
 
 ## Key Features Implementation
 
@@ -270,10 +245,6 @@ app/
 3. Make your changes
 4. Add tests if applicable
 5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
 
 ## Support
 
