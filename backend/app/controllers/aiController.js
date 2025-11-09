@@ -51,10 +51,10 @@ const endOfYear = (date) => {
 export const summarizeEntry = async (req, res) => {
     try {
         const { entryContent, entryTitle } = req.body;
-        
+
         if (!entryContent) {
             return res.status(400).json({
-                error: 'Entry content is required'
+                error: 'Entry content is required',
             });
         }
 
@@ -85,32 +85,39 @@ Format as JSON with keys: summary, keyThemes (array), detectedMood (object with 
             model: 'gemini-2.5-flash',
             contents: prompt,
         });
-        
+
         const aiResponse = response.candidates[0].content.parts[0].text;
-        
+
         // Try to parse the JSON response
         let analysisData;
         try {
             // Remove any markdown formatting if present
-            const cleanResponse = aiResponse.replace(/```json\n?|\n?```/g, '').trim();
+            const cleanResponse = aiResponse
+                .replace(/```json\n?|\n?```/g, '')
+                .trim();
             analysisData = JSON.parse(cleanResponse);
         } catch (parseError) {
             // If JSON parsing fails, create a structured response
             analysisData = {
                 summary: aiResponse.substring(0, 300) + '...',
                 keyThemes: ['Reflection', 'Personal Growth'],
-                detectedMood: { emoji: '😊', label: 'Reflective', confidence: 75 },
+                detectedMood: {
+                    emoji: '😊',
+                    label: 'Reflective',
+                    confidence: 75,
+                },
                 insights: ['Shows thoughtful self-reflection'],
                 patterns: ['Descriptive writing style'],
-                encouragement: 'Your thoughtful approach to journaling shows great self-awareness.'
+                encouragement:
+                    'Your thoughtful approach to journaling shows great self-awareness.',
             };
         }
-        
+
         res.json(analysisData);
     } catch (error) {
         console.error('Entry summarization error:', error);
         res.status(500).json({
-            error: 'Failed to analyze entry'
+            error: 'Failed to analyze entry',
         });
     }
 };
@@ -143,16 +150,16 @@ Generate a prompt that feels like a caring friend asking a meaningful question.`
             model: 'gemini-2.5-flash',
             contents: prompt,
         });
-        
+
         const generatedPrompt = response.candidates[0].content.parts[0].text;
-        
-        res.json({ 
-            prompt: generatedPrompt
+
+        res.json({
+            prompt: generatedPrompt,
         });
     } catch (error) {
         console.error('Random prompt generation error:', error);
         res.status(500).json({
-            error: 'Failed to generate prompt'
+            error: 'Failed to generate prompt',
         });
     }
 };
@@ -160,15 +167,15 @@ Generate a prompt that feels like a caring friend asking a meaningful question.`
 export const generateMoodBasedPrompt = async (req, res) => {
     try {
         const { mood, feeling } = req.body;
-        
+
         if (!mood && !feeling) {
             return res.status(400).json({
-                error: 'Please provide either mood or feeling'
+                error: 'Please provide either mood or feeling',
             });
         }
 
         const promptContext = feeling || mood;
-        
+
         const prompt = `You are a compassionate journaling companion. Create a gentle, supportive prompt for someone feeling "${promptContext}".
 
 Guidelines:
@@ -186,17 +193,17 @@ Create a prompt that feels like emotional support from a caring friend.`;
             model: 'gemini-2.5-flash',
             contents: prompt,
         });
-        
+
         const generatedPrompt = response.candidates[0].content.parts[0].text;
-        
-        res.json({ 
+
+        res.json({
             prompt: generatedPrompt,
-            basedOn: promptContext
+            basedOn: promptContext,
         });
     } catch (error) {
         console.error('Mood-based prompt generation error:', error);
         res.status(500).json({
-            error: 'Failed to generate prompt'
+            error: 'Failed to generate prompt',
         });
     }
 };
@@ -231,27 +238,44 @@ export const chatAssistant = async (req, res) => {
         }
 
         const msg = message.toLowerCase();
-        
+
         // Handle temporal queries using provided context
         if (context && context.recentEntries) {
             // Check for temporal keywords that can be answered with context
-            if (msg.includes('yesterday') || msg.includes('today') || msg.includes('last week')) {
+            if (
+                msg.includes('yesterday') ||
+                msg.includes('today') ||
+                msg.includes('last week')
+            ) {
                 const relevantEntries = context.recentEntries;
-                
+
                 if (relevantEntries.length === 0) {
-                    const timeRef = msg.includes('yesterday') ? 'yesterday' : 
-                                  msg.includes('today') ? 'today' : 'last week';
+                    const timeRef = msg.includes('yesterday')
+                        ? 'yesterday'
+                        : msg.includes('today')
+                        ? 'today'
+                        : 'last week';
                     return res.json({
-                        response: `I couldn't find any entries from ${timeRef}.`
+                        response: `I couldn't find any entries from ${timeRef}.`,
                     });
                 }
 
                 const entriesText = relevantEntries
-                    .map(entry => `Date: ${entry.date} ${entry.time}\nTitle: ${entry.title}\nMood: ${entry.mood || 'not specified'}\nContent: ${entry.content}`)
+                    .map(
+                        (entry) =>
+                            `Date: ${entry.date} ${entry.time}\nTitle: ${
+                                entry.title
+                            }\nMood: ${
+                                entry.mood || 'not specified'
+                            }\nContent: ${entry.content}`
+                    )
                     .join('\n\n');
 
-                const timeRef = msg.includes('yesterday') ? 'yesterday' : 
-                              msg.includes('today') ? 'today' : 'last week';
+                const timeRef = msg.includes('yesterday')
+                    ? 'yesterday'
+                    : msg.includes('today')
+                    ? 'today'
+                    : 'last week';
 
                 const prompt = `You are a supportive journaling companion. The user asked about ${timeRef}. Here are their entries from that time:
 
@@ -281,15 +305,15 @@ Provide a brief, caring reflection on what happened ${timeRef}.`;
                     .replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown bold
                     .replace(/\*(.*?)\*/g, '$1'); // Remove markdown italic
 
-                return res.json({ 
+                return res.json({
                     response: text,
-                    entries: relevantEntries.map(entry => ({
+                    entries: relevantEntries.map((entry) => ({
                         _id: entry.id,
                         date: entry.date,
                         title: entry.title,
                         content: entry.content,
-                        mood: entry.mood
-                    }))
+                        mood: entry.mood,
+                    })),
                 });
             }
         }
@@ -362,9 +386,9 @@ Provide a brief, warm reflection on their journey with this topic.`;
                 .replace(/<[^>]*>/g, '') // Remove HTML tags
                 .replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown bold
                 .replace(/\*(.*?)\*/g, '$1'); // Remove markdown italic
-            return res.json({ 
+            return res.json({
                 response: text,
-                entries: entriesWithIds
+                entries: entriesWithIds,
             });
         }
 
@@ -431,9 +455,9 @@ Offer a brief, gentle insight about their emotional journey this month.`;
                 .replace(/<[^>]*>/g, '') // Remove HTML tags
                 .replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown bold
                 .replace(/\*(.*?)\*/g, '$1'); // Remove markdown italic
-            return res.json({ 
+            return res.json({
                 response: text,
-                entries: entriesWithIds
+                entries: entriesWithIds,
             });
         }
 
@@ -538,27 +562,39 @@ Offer brief, supportive insights like a caring friend would.`;
                 .replace(/<[^>]*>/g, '') // Remove HTML tags
                 .replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown bold
                 .replace(/\*(.*?)\*/g, '$1'); // Remove markdown italic
-            return res.json({ 
-                response: advice
+            return res.json({
+                response: advice,
             });
         }
 
         // Handle date-specific queries (only if not already handled by context)
         if (
             (msg.includes('what happened') ||
-            msg.includes('show entries from')) &&
-            !(context && context.recentEntries && (msg.includes('yesterday') || msg.includes('today') || msg.includes('last week')))
+                msg.includes('show entries from')) &&
+            !(
+                context &&
+                context.recentEntries &&
+                (msg.includes('yesterday') ||
+                    msg.includes('today') ||
+                    msg.includes('last week'))
+            )
         ) {
             let targetDate;
             let endDate;
 
-            if (msg.includes('last year this day') || msg.includes('last year on this day')) {
+            if (
+                msg.includes('last year this day') ||
+                msg.includes('last year on this day')
+            ) {
                 targetDate = new Date();
                 targetDate.setFullYear(targetDate.getFullYear() - 1);
                 targetDate.setHours(0, 0, 0, 0);
                 endDate = new Date(targetDate);
                 endDate.setHours(23, 59, 59, 999);
-            } else if (msg.includes('last month this day') || msg.includes('last month on this day')) {
+            } else if (
+                msg.includes('last month this day') ||
+                msg.includes('last month on this day')
+            ) {
                 targetDate = new Date();
                 targetDate.setMonth(targetDate.getMonth() - 1);
                 targetDate.setHours(0, 0, 0, 0);
@@ -576,12 +612,18 @@ Offer brief, supportive insights like a caring friend would.`;
 
                 if (entries.length === 0) {
                     return res.json({
-                        response: "You don't have any entries from the past week.",
+                        response:
+                            "You don't have any entries from the past week.",
                     });
                 }
 
                 const entriesText = entries
-                    .map(entry => `Date: ${entry.date.toISOString().split('T')[0]}\n${entry.content}`)
+                    .map(
+                        (entry) =>
+                            `Date: ${entry.date.toISOString().split('T')[0]}\n${
+                                entry.content
+                            }`
+                    )
                     .join('\n\n');
 
                 const prompt = `You are a supportive journaling companion. Provide a brief reflection on this past week.
@@ -608,8 +650,8 @@ Offer a brief, caring summary of their week.`;
                     .replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown bold
                     .replace(/\*(.*?)\*/g, '$1'); // Remove markdown italic
 
-                return res.json({ 
-                    response: text
+                return res.json({
+                    response: text,
                 });
             } else {
                 // Try to parse specific date
@@ -711,9 +753,9 @@ Provide a gentle, thoughtful reflection on this period of their life.`;
                 .replace(/<[^>]*>/g, '') // Remove HTML tags
                 .replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown bold
                 .replace(/\*(.*?)\*/g, '$1'); // Remove markdown italic
-            return res.json({ 
+            return res.json({
                 response: text,
-                entries: entriesWithIds
+                entries: entriesWithIds,
             });
         }
 
@@ -832,7 +874,7 @@ Just ask me naturally - I understand conversational language and I'm here to sup
 
 export const generatePeriodSummary = async (req, res) => {
     try {
-        const { period } = req.body; // 'daily', 'monthly', 'yearly'
+        const { period } = req.body;
         const userId = req.user?.id;
 
         if (!userId) {
@@ -879,13 +921,20 @@ export const generatePeriodSummary = async (req, res) => {
                 entryCount: 0,
                 dateRange: {
                     start: startDate.toISOString(),
-                    end: endDate.toISOString()
-                }
+                    end: endDate.toISOString(),
+                },
             });
         }
 
         const entriesText = entries
-            .map(entry => `Time: ${entry.date.toISOString()}\nTitle: ${entry.title}\nMood: ${entry.mood || 'not specified'}\nContent: ${entry.content}`)
+            .map(
+                (entry) =>
+                    `Time: ${entry.date.toISOString()}\nTitle: ${
+                        entry.title
+                    }\nMood: ${entry.mood || 'not specified'}\nContent: ${
+                        entry.content
+                    }`
+            )
             .join('\n\n---\n\n');
 
         const prompt = `You are a compassionate journaling companion reflecting on someone's ${period} journey. Provide a brief, supportive summary.
@@ -919,13 +968,13 @@ Provide a brief, warm reflection on their ${period} journey.`;
             entryCount: entries.length,
             dateRange: {
                 start: startDate.toISOString(),
-                end: endDate.toISOString()
-            }
+                end: endDate.toISOString(),
+            },
         });
     } catch (error) {
         console.error('Period summary generation error:', error);
         res.status(500).json({
-            error: 'Failed to generate period summary'
+            error: 'Failed to generate period summary',
         });
     }
 };

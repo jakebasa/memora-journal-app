@@ -1,9 +1,19 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
+interface JournalEntry {
+    _id: string;
+    title: string;
+    content: string;
+    mood: string;
+    tags: string[];
+    createdAt: string;
+    updatedAt: string;
+}
+
 interface Message {
     role: 'user' | 'ai';
     content: string;
-    entries?: any[];
+    entries?: JournalEntry[];
     isTyping?: boolean;
 }
 
@@ -20,13 +30,16 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     const [messages, setMessages] = useState<Message[]>([
         {
             role: 'ai',
-            content: "Hi! I'm your journal assistant. Ask me about your entries, patterns in your mood, or get writing prompts! ✨",
+            content:
+                "Hi! I'm your journal assistant. Ask me about your entries, patterns in your mood, or get writing prompts! ✨",
         },
     ]);
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <ChatContext.Provider value={{ messages, setMessages, isOpen, setIsOpen }}>
+        <ChatContext.Provider
+            value={{ messages, setMessages, isOpen, setIsOpen }}
+        >
             {children}
         </ChatContext.Provider>
     );

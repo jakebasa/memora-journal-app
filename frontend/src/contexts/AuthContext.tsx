@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+    createContext,
+    useContext,
+    useState,
+    useEffect,
+    ReactNode,
+} from 'react';
 import { buildApiUrl } from '@/config/api';
 import { clearEntriesCache } from '@/hooks/useEntries';
 
@@ -89,7 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 email: data.user.email,
                 name: data.user.name,
             });
-            setToken(data.token); // ✅ store token in state
+            setToken(data.token);
             localStorage.setItem('journal-user', JSON.stringify(data.user));
             localStorage.setItem('journal-token', data.token);
         } catch (err) {
@@ -105,7 +111,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (user) {
             clearEntriesCache(user.id);
         }
-        
+
         setUser(null);
         setToken(null); // ✅ clear token
         localStorage.removeItem('journal-user');
@@ -126,7 +132,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         <AuthContext.Provider
             value={{
                 user,
-                token, // ✅ provide token
+                token,
                 login,
                 signup,
                 logout,

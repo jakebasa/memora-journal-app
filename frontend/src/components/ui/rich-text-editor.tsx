@@ -15,12 +15,28 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
     const editorRef = useRef<HTMLDivElement>(null);
     const [isFocused, setIsFocused] = useState(false);
+    const [forceUpdate, setForceUpdate] = useState(false);
 
     useEffect(() => {
         if (editorRef.current && editorRef.current.innerHTML !== content) {
             editorRef.current.innerHTML = content || '';
         }
     }, [content]);
+
+    // Update formatting states when selection changes
+    useEffect(() => {
+        const handleSelectionChange = () => {
+            setForceUpdate((prev) => !prev);
+        };
+
+        document.addEventListener('selectionchange', handleSelectionChange);
+        return () => {
+            document.removeEventListener(
+                'selectionchange',
+                handleSelectionChange
+            );
+        };
+    }, []);
 
     // Add class to show placeholder when empty
     useEffect(() => {
@@ -57,10 +73,20 @@ export function RichTextEditor({
         }
     };
 
+    // Check if a format is currently active
+    const isFormatActive = (command: string, value?: string) => {
+        if (command === 'formatBlock') {
+            return document.queryCommandValue(command) === value;
+        }
+        return document.queryCommandState(command);
+    };
+
     const executeCommand = (command: string, value?: string) => {
         document.execCommand(command, false, value);
         editorRef.current?.focus();
         handleInput();
+        // Force a re-render to update button states
+        setForceUpdate((prev) => !prev);
     };
 
     const formatButtons = [
@@ -84,18 +110,25 @@ export function RichTextEditor({
         <div className='border border-border rounded-lg shadow-soft overflow-hidden'>
             {/* Toolbar */}
             <div className='flex items-center gap-1 p-3 border-b border-border bg-muted/30'>
-                {formatButtons.map(({ command, icon: Icon, label, value }) => (
-                    <Button
-                        key={command}
-                        variant='ghost'
-                        size='icon-sm'
-                        onClick={() => executeCommand(command, value)}
-                        className='h-8 w-8'
-                        title={label}
-                    >
-                        <Icon className='h-3 w-3' />
-                    </Button>
-                ))}
+                {formatButtons.map(({ command, icon: Icon, label, value }) => {
+                    const isActive = isFormatActive(command, value);
+                    return (
+                        <Button
+                            key={command}
+                            variant={isActive ? 'secondary' : 'ghost'}
+                            size='icon-sm'
+                            onClick={() => executeCommand(command, value)}
+                            className={`h-8 w-8 ${
+                                isActive
+                                    ? 'bg-primary/10 text-primary hover:text-primary hover:bg-primary/15'
+                                    : ''
+                            }`}
+                            title={label}
+                        >
+                            <Icon className='h-3 w-3' />
+                        </Button>
+                    );
+                })}
             </div>
 
             {/* Editor */}
