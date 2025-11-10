@@ -12,6 +12,9 @@ import userRoutes from './app/routes/userRoutes.js';
 dotenv.config();
 const app = express();
 
+// Trust proxy - required for Render deployment
+app.set('trust proxy', 1);
+
 // Rate limiting - increased limits for development
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
