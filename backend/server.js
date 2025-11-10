@@ -49,7 +49,9 @@ const corsOptions = {
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
-            callback(new Error('Not allowed by CORS'));
+            // Reject with false instead of Error to avoid 500
+            console.log('CORS rejected origin:', origin);
+            callback(null, false);
         }
     },
     credentials: true, // Allow credentials (cookies, authorization headers)
