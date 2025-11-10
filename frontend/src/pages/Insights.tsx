@@ -90,12 +90,10 @@ const Insights = () => {
         const fetchEntries = async () => {
             try {
                 const res = await fetch(
-                    `${
-                        import.meta.env.VITE_BACKEND_URL ||
-                        'http://localhost:5000'
-                    }/api/entries?limit=1000`,
+                    buildApiUrl('/api/entries?limit=1000'),
                     {
                         headers: { Authorization: `Bearer ${token}` },
+                        credentials: 'include',
                     }
                 );
                 const data = await res.json();
@@ -125,6 +123,7 @@ const Insights = () => {
                         'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`,
                     },
+                    credentials: 'include',
                     body: JSON.stringify({ period: selectedPeriod }),
                 }
             );

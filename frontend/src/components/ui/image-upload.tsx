@@ -107,6 +107,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
+                credentials: 'include',
                 body: formData,
             });
 
@@ -149,7 +150,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                     method: 'DELETE',
                     headers: {
                         Authorization: `Bearer ${token}`,
-                    }
+                    },
+                    credentials: 'include',
                 });
                 
                 // Log response for debugging but don't fail on 404 since deletion might still work

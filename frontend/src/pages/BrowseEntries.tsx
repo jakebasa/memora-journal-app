@@ -32,7 +32,6 @@ interface JournalEntry {
     updatedAt: string;
 }
 
-const BACKEND_URL = 'http://localhost:5000';
 const PAGE_SIZE = 9; // 3x3 grid
 
 export default function BrowseEntries() {
@@ -62,6 +61,7 @@ export default function BrowseEntries() {
         try {
             const res = await fetch(buildApiUrl(`/api/entries?page=${currentPage}&limit=${PAGE_SIZE}&search=${encodeURIComponent(searchTerm)}&mood=${selectedMood}&tag=${selectedTag}`), {
                 headers: { Authorization: `Bearer ${token}` },
+                credentials: 'include',
             });
             const data = await res.json();
             if (res.ok) {

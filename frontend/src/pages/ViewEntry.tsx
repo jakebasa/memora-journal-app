@@ -69,6 +69,7 @@ export default function ViewEntry() {
                 setLoading(true);
                 const res = await fetch(buildApiUrl(`/api/entries/${id}`), {
                     headers: { Authorization: `Bearer ${token}` },
+                    credentials: 'include',
                 });
                 const data = await res.json();
                 if (!res.ok)
@@ -99,6 +100,7 @@ export default function ViewEntry() {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
+                credentials: 'include',
             });
 
             const data = await res.json();

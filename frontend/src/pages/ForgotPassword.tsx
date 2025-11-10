@@ -13,6 +13,7 @@ import {
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, BookOpen, ArrowLeft, Mail } from 'lucide-react';
+import { buildApiUrl } from '@/config/api';
 import journalHero from '@/assets/journal-hero.jpg';
 
 const ForgotPassword = () => {
@@ -33,11 +34,12 @@ const ForgotPassword = () => {
 
         setIsLoading(true);
         try {
-            const response = await fetch('/api/auth/forgot-password', {
+            const response = await fetch(buildApiUrl('/api/auth/forgot-password'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({ email }),
             });
 

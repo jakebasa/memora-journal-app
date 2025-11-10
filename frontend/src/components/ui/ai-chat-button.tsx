@@ -190,6 +190,7 @@ export function AiChatButton() {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
+                credentials: 'include',
                 body: JSON.stringify(enhancedMessage),
             });
 

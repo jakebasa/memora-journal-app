@@ -18,6 +18,7 @@ import { Shimmer, ShimmerText } from '@/components/ui/shimmer';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
+import { buildApiUrl } from '@/config/api';
 import {
     ArrowLeft,
     Save,
@@ -36,8 +37,6 @@ import {
 } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useEntries } from '@/hooks/useEntries';
-import { buildApiUrl } from '@/config/api';
-
 import { ImageUpload } from '@/components/ui/image-upload';
 
 interface JournalEntry {
@@ -56,7 +55,7 @@ interface JournalEntry {
     updatedAt: string;
 }
 
-const BACKEND_URL = 'http://localhost:5000';
+// Removed hardcoded BACKEND_URL - now using buildApiUrl() from config
 
 export default function EditEntry() {
     const { user, token, logout } = useAuth();
@@ -101,6 +100,7 @@ export default function EditEntry() {
                 setIsInitialLoading(true);
                 const res = await fetch(buildApiUrl(`/api/entries/${id}`), {
                     headers: { Authorization: `Bearer ${token}` },
+                    credentials: 'include',
                 });
                 const data = await res.json();
                 if (!res.ok)
@@ -136,12 +136,13 @@ export default function EditEntry() {
     const handleAutoSave = async () => {
         try {
             if (!entry) return;
-            await fetch(`${BACKEND_URL}/api/entries/${entry._id}`, {
+            await fetch(buildApiUrl(`/api/entries/${entry._id}`), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     title,
                     content,
@@ -167,12 +168,13 @@ export default function EditEntry() {
         }
         setIsLoading(true);
         try {
-            const res = await fetch(`${BACKEND_URL}/api/entries/${entry._id}`, {
+            const res = await fetch(buildApiUrl(`/api/entries/${entry._id}`), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     title,
                     content,
@@ -215,7 +217,7 @@ export default function EditEntry() {
         if (!entry) return;
 
         try {
-            const res = await fetch(`${BACKEND_URL}/api/entries/${entry._id}`, {
+            const res = await fetch(buildApiUrl(`/api/entries/${entry._id}`), {
                 method: 'DELETE',
                 headers: {
                     Authorization: `Bearer ${token}`,

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { API_CONFIG, devLog, devError } from '../config/api';
+import { buildApiUrl, devLog, devError } from '../config/api';
 import { useAuth } from './AuthContext';
 
 type ThemePreference = 'light' | 'dark' | 'system';
@@ -55,11 +55,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/user/theme`, {
+      const response = await fetch(buildApiUrl('/api/user/theme'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -92,12 +93,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
       // Sync to backend if user is authenticated
       if (user && token) {
-        const response = await fetch(`${API_CONFIG.BASE_URL}/api/user/theme`, {
+        const response = await fetch(buildApiUrl('/api/user/theme'), {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({ theme: newPreference }),
         });
 
@@ -129,12 +131,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
       // Sync to backend if user is authenticated
       if (user && token) {
-        const response = await fetch(`${API_CONFIG.BASE_URL}/api/user/theme`, {
+        const response = await fetch(buildApiUrl('/api/user/theme'), {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({ colorTheme: newColorTheme }),
         });
 

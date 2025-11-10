@@ -61,6 +61,7 @@ export const useEntries = () => {
         try {
             const response = await fetch(buildApiUrl('/api/entries?limit=1000'), {
                 headers: { Authorization: `Bearer ${token}` },
+                credentials: 'include',
             });
 
             if (!response.ok) {

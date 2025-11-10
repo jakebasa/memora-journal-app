@@ -13,6 +13,7 @@ import {
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, BookOpen, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { buildApiUrl } from '@/config/api';
 import journalHero from '@/assets/journal-hero.jpg';
 
 const ResetPassword = () => {
@@ -34,7 +35,9 @@ const ResetPassword = () => {
             }
 
             try {
-                const response = await fetch(`/api/auth/reset-password/${token}`);
+                const response = await fetch(buildApiUrl(`/api/auth/reset-password/${token}`), {
+                    credentials: 'include',
+                });
                 if (response.ok) {
                     setIsValidToken(true);
                 } else {
@@ -93,11 +96,12 @@ const ResetPassword = () => {
 
         setIsLoading(true);
         try {
-            const response = await fetch(`/api/auth/reset-password/${token}`, {
+            const response = await fetch(buildApiUrl(`/api/auth/reset-password/${token}`), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({ password }),
             });
 

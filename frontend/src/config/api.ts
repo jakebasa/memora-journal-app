@@ -26,11 +26,16 @@ export const API_CONFIG = {
 
 // Helper function to build full URLs
 export const buildApiUrl = (endpoint: string): string => {
-    return `${API_CONFIG.BASE_URL}${endpoint}`;
+    // Remove trailing slash from BASE_URL if present
+    const baseUrl = API_CONFIG.BASE_URL.replace(/\/$/, '');
+    return `${baseUrl}${endpoint}`;
 };
 
 // Development mode check
-export const isDevelopment = process.env.NODE_ENV === 'development' || import.meta.env.MODE === 'development' || !import.meta.env.PROD;
+export const isDevelopment =
+    process.env.NODE_ENV === 'development' ||
+    import.meta.env.MODE === 'development' ||
+    !import.meta.env.PROD;
 
 // Logger utility for development
 export const devLog = (...args: any[]) => {

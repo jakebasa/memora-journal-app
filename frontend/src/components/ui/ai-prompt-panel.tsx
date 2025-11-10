@@ -55,6 +55,7 @@ export function AiPromptPanel({ isOpen, onClose, onSelectPrompt }: AiPromptPanel
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -92,6 +93,7 @@ export function AiPromptPanel({ isOpen, onClose, onSelectPrompt }: AiPromptPanel
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({ feeling: currentFeeling }),
       });
 
