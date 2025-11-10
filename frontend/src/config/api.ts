@@ -31,11 +31,8 @@ export const buildApiUrl = (endpoint: string): string => {
     return `${baseUrl}${endpoint}`;
 };
 
-// Development mode check
-export const isDevelopment =
-    process.env.NODE_ENV === 'development' ||
-    import.meta.env.MODE === 'development' ||
-    !import.meta.env.PROD;
+// Development mode check - only true in actual development
+export const isDevelopment = import.meta.env.DEV;
 
 // Logger utility for development
 export const devLog = (...args: any[]) => {

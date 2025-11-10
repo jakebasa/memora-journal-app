@@ -291,29 +291,31 @@ export default function ViewEntry() {
             <main className='container mx-auto px-4 py-8 max-w-4xl'>
                 <Card className='shadow-elegant'>
                     <CardHeader className='border-b border-border'>
-                        <div className='flex items-start justify-between'>
+                        <div className='flex flex-col gap-4'>
                             <div className='flex-1'>
-                                <div className='flex items-center gap-3 mb-3'>
-                                    <CardTitle className='text-3xl font-medium'>
+                                <div className='flex flex-col sm:flex-row sm:items-center gap-3 mb-3'>
+                                    <CardTitle className='text-2xl sm:text-3xl font-medium break-words'>
                                         {entry.title}
                                     </CardTitle>
                                     <Badge
                                         variant='secondary'
-                                        className='text-lg px-3 py-1'
+                                        className='text-base sm:text-lg px-3 py-1 w-fit'
                                     >
                                         {entry.mood}
                                     </Badge>
                                 </div>
-                                <div className='flex items-center gap-4 text-sm text-muted-foreground'>
+                                <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground'>
                                     <div className='flex items-center gap-1'>
-                                        <Calendar className='h-4 w-4' />
-                                        {format(
-                                            new Date(entry.createdAt),
-                                            'EEEE, MMMM dd, yyyy'
-                                        )}
+                                        <Calendar className='h-4 w-4 flex-shrink-0' />
+                                        <span className='break-words'>
+                                            {format(
+                                                new Date(entry.createdAt),
+                                                'EEEE, MMMM dd, yyyy'
+                                            )}
+                                        </span>
                                     </div>
                                     <div className='flex items-center gap-1'>
-                                        <Clock className='h-4 w-4' />
+                                        <Clock className='h-4 w-4 flex-shrink-0' />
                                         {format(
                                             new Date(entry.createdAt),
                                             'h:mm a'
@@ -394,9 +396,9 @@ export default function ViewEntry() {
                                     </div>
                                 )}
 
-                                {/* Two Images - Side by Side */}
+                                {/* Two Images - Side by Side on desktop, stacked on mobile */}
                                 {entry.images.length === 2 && (
-                                    <div className='grid grid-cols-2 gap-4'>
+                                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                                         {entry.images.map((image, index) => (
                                             <div key={image.publicId} className='relative group'>
                                                 <img
@@ -493,8 +495,8 @@ export default function ViewEntry() {
                         />
                     </CardContent>
 
-                    <div className='border-t border-border p-6'>
-                        <div className='flex items-center justify-between'>
+                    <div className='border-t border-border p-4 sm:p-6'>
+                        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
                             <div className='text-sm text-muted-foreground'>
                                 Created{' '}
                                 {format(
@@ -503,20 +505,22 @@ export default function ViewEntry() {
                                 )}{' '}
                                 at {format(new Date(entry.createdAt), 'h:mm a')}
                             </div>
-                            <div className='flex items-center gap-2'>
+                            <div className='flex flex-wrap items-center gap-2'>
                                 <Button
                                     variant='ghost'
                                     size='sm'
                                     onClick={() => setShowSummaryPanel(true)}
+                                    className='flex-1 sm:flex-none'
                                 >
                                     <Sparkles className='h-4 w-4 mr-2' />
-                                    Insights
+                                    <span className='hidden sm:inline'>Insights</span>
+                                    <span className='sm:hidden'>AI</span>
                                 </Button>
                                 {/* <Button variant='ghost' size='sm'>
                                     <Share className='h-4 w-4 mr-2' />
                                     Share
                                 </Button> */}
-                                <Button variant='ghost' size='sm' asChild>
+                                <Button variant='ghost' size='sm' asChild className='flex-1 sm:flex-none'>
                                     <Link to={`/entries/${entry._id}/edit`}>
                                         <Edit className='h-4 w-4 mr-2' />
                                         Edit
@@ -525,7 +529,7 @@ export default function ViewEntry() {
                                 <Button
                                     variant='ghost'
                                     size='sm'
-                                    className='text-destructive hover:text-destructive'
+                                    className='text-destructive hover:text-destructive flex-1 sm:flex-none'
                                     onClick={() => setShowDeleteModal(true)}
                                 >
                                     <Trash2 className='h-4 w-4 mr-2' />
